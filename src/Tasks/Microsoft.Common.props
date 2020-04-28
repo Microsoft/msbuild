@@ -33,12 +33,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Import Project="$(DirectoryBuildPropsPath)" Condition="'$(ImportDirectoryBuildProps)' == 'true' and exists('$(DirectoryBuildPropsPath)')"/>
 
   <!--
-      The declaration of $(BaseIntermediateOutputPath) had to be moved up from Microsoft.Common.CurrentVersion.targets
-      in order for the $(MSBuildProjectExtensionsPath) to use it as a default.
+      The $(BuildDir) replaces $(BaseIntermediateOutputPath) to enable common root output path in a solution
+      and across multiple projects. Also for the $(MSBuildProjectExtensionsPath) to use it as a common root.
   -->
   <PropertyGroup>
-    <BaseIntermediateOutputPath>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(BaseIntermediateOutputPath)', 'obj'))))</BaseIntermediateOutputPath>
-    <_InitialBaseIntermediateOutputPath>$(BaseIntermediateOutputPath)</_InitialBaseIntermediateOutputPath>
+    <BuildDir>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(BuildDir)', 'build'))))</BuildDir>
+    <_InitialBuildDir>$(BuildDir)</_InitialBuildDir>
   </PropertyGroup>
 
   <!--
@@ -49,10 +49,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       management system can write out multiple files but the order of the import is alphabetic because MSBuild sorts the list.
   -->
   <PropertyGroup>
-    <MSBuildProjectExtensionsPath>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(MSBuildProjectExtensionsPath)', '$(BaseIntermediateOutputPath)'))))</MSBuildProjectExtensionsPath>
+    <MSBuildProjectExtensionsPath>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(MSBuildProjectExtensionsPath)', '$(BuildDir)ext'))))</MSBuildProjectExtensionsPath>
     <!--
         Import paths that are relative default to be relative to the importing file.  However, since MSBuildExtensionsPath
-        defaults to BaseIntermediateOutputPath we expect it to be relative to the project directory.  So if the path is relative
+        defaults to BuildDir we expect it to be relative to the project directory.  So if the path is relative
         it needs to be made absolute based on the project directory.
     -->
     <MSBuildProjectExtensionsPath Condition="!$([System.IO.Path]::IsPathRooted('$(MSBuildProjectExtensionsPath)'))">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(MSBuildProjectExtensionsPath)'))</MSBuildProjectExtensionsPath>

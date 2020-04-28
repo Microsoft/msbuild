@@ -105,6 +105,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Several properties must be set in the main project file, before using this .TARGETS file.
     However, if the properties are not set, we pick some defaults.
 
+    BuildDir:
+    Indicates the final output location for the project or solution.
+    All the *OutpuPath properties should derive from this.
+
     OutDir:
     Indicates the final output location for the project or solution. When building a solution,
     OutDir can be used to gather multiple project outputs in one location. In addition,
@@ -130,7 +134,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     This is the full intermediate Output Path, and is derived from BaseIntermediateOutputPath, if none specified
     (eg. obj\Debug). If this property is overridden, then setting BaseIntermediateOutputPath has no effect.
 
-    Ensure any and all path property has a trailing slash, so it can be concatenated.
+    Ensure any and all path properties have a trailing slash which enables concatenation without specifying path separator.
   -->
 
   <PropertyGroup>
@@ -142,6 +146,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <_OutputPathWasMissing Condition="'$(_OriginalPlatform)' != '' and '$(_OriginalConfiguration)' != '' and '$(OutputPath)' == ''">true</_OutputPathWasMissing>
     <!-- Check whether BaseOutputPath was specified -->
     <BaseOutputPathWasSpecified Condition="'$(BaseOutputPath)' != ''">true</BaseOutputPathWasSpecified>
+    <!-- Initialize BuildDir when empty, to ensure build doesn't produce inconsistent paths -->
+    <BuildDir>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(BuildDir)', 'build'))))</BuildDir>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -150,12 +156,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
     <ConfigurationName Condition="'$(ConfigurationName)' == ''">$(Configuration)</ConfigurationName>
 
-    <BaseOutputPath>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(BaseOutputPath)', 'bin'))))</BaseOutputPath>
+    <BaseOutputPath>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(BaseOutputPath)', '$(BuildDir)bin'))))</BaseOutputPath>
     <OutputPath Condition="'$(OutputPath)' == '' and '$(PlatformName)' == 'AnyCPU'">$([System.IO.Path]::Combine('$(BaseOutputPath)', '$(Configuration)'))</OutputPath>
     <OutputPath Condition="'$(OutputPath)' == '' and '$(PlatformName)' != 'AnyCPU'">$([System.IO.Path]::Combine('$(BaseOutputPath)', '$(PlatformName)', '$(Configuration)'))</OutputPath>
     <OutputPath>$([MSBuild]::EnsureTrailingSlash('$(OutputPath)'))</OutputPath>
 
-    <BaseIntermediateOutputPath>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(BaseIntermediateOutputPath)', 'obj'))))</BaseIntermediateOutputPath>
+    <BaseIntermediateOutputPath>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(BaseIntermediateOutputPath)', '$(BuildDir)obj'))))</BaseIntermediateOutputPath>
     <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == '' and '$(PlatformName)' == 'AnyCPU'">$([System.IO.Path]::Combine('$(BaseIntermediateOutputPath)', '$(Configuration)'))</IntermediateOutputPath>
     <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == '' and '$(PlatformName)' != 'AnyCPU'">$([System.IO.Path]::Combine('$(BaseIntermediateOutputPath)', '$(PlatformName)', '$(Configuration)'))</IntermediateOutputPath>
     <IntermediateOutputPath>$([MSBuild]::EnsureTrailingSlash('$(IntermediateOutputPath)'))</IntermediateOutputPath>
@@ -475,7 +481,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <!-- Output location for publish target. -->
   <PropertyGroup>
-    <PublishDir>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(PublishDir)', '$(OutputPath)app.publish'))))</PublishDir>
+    <PublishDir>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(PublishDir)', 'publish'))))</PublishDir>
   </PropertyGroup>
 
   <!--
@@ -841,17 +847,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <!--
       Log a warning if:
-        1. $(EnableBaseIntermediateOutputPathMismatchWarning) is 'true'
-        2. $(BaseIntermediateOutputPath) was set in the body of a project after its default value was set in 'Microsoft.Common.props'
-        3. $(BaseIntermediateOutputPath) is not the same as $(MSBuildProjectExtensionsPath)
+        1. $(EnableBuildDirMismatchWarning) is 'true'
+        2. $(BuildDir) was set in the body of a project after its default value was set in 'Microsoft.Common.props'
+        3. $(BuildDir) is not the same as $(MSBuildProjectExtensionsPath)
 
-      Similar to the error above, there are cases when users set $(BaseIntermediateOutputPath) in the body of their project and things build but only by coincidence.
-      MSBuild does not know if $(BaseIntermediateOutputPath) changing would cause problems so tools like NuGet must set $(EnableBaseIntermediateOutputPathMismatchWarning)
-      to 'true'.
+      Similar to the error above, there are cases when users set $(BuildDir) in the body of their project and things build but only by coincidence.
+      MSBuild does not know if $(BuildDir) changing would cause problems so tools like NuGet must set $(EnableBuildDirMismatchWarning) to 'true'.
     -->
-    <Warning Condition=" '$(EnableBaseIntermediateOutputPathMismatchWarning)' == 'true' And '$(_InitialBaseIntermediateOutputPath)' != '$(BaseIntermediateOutputPath)' And '$(BaseIntermediateOutputPath)' != '$(MSBuildProjectExtensionsPath)' "
+    <Warning Condition=" '$(EnableBuildDirMismatchWarning)' == 'true' And '$(_InitialBuildDir)' != '$(BuildDir)' And '$(BuildDir)' != '$(MSBuildProjectExtensionsPath)' "
              Code="MSB3539"
-             Text="The value of the property &quot;BaseIntermediateOutputPath&quot; was modified after it was used by MSBuild which can lead to unexpected build results. Tools such as NuGet will write outputs to the path specified by the &quot;MSBuildProjectExtensionsPath&quot; instead. To set this property, you must do so before Microsoft.Common.props is imported, for example by using Directory.Build.props.  For more information, please visit https://go.microsoft.com/fwlink/?linkid=869650"
+             Text="The value of the property &quot;BuildDir&quot; was modified after it was used by MSBuild which can lead to unexpected build results. Tools such as NuGet will write outputs to the path specified by the &quot;MSBuildProjectExtensionsPath&quot; instead. To set this property, you must do so before Microsoft.Common.props is imported, for example by using Directory.Build.props.  For more information, please visit https://go.microsoft.com/fwlink/?linkid=869650"
              />
   </Target>
 
@@ -5526,7 +5531,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <RemoveDir
         Directories="$(PublishDir)"
-        Condition="'$(PublishDir)'=='$(OutputPath)app.publish\' and Exists('$(PublishDir)')"/>
+        Condition="'$(PublishDir)' == '$([MSBuild]::EnsureTrailingSlash(`publish`))' and Exists('$(PublishDir)')"/>
 
   </Target>
 
