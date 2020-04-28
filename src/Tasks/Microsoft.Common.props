@@ -33,6 +33,15 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Import Project="$(DirectoryBuildPropsPath)" Condition="'$(ImportDirectoryBuildProps)' == 'true' and exists('$(DirectoryBuildPropsPath)')"/>
 
   <!--
+      The declaration of $(BaseIntermediateOutputPath) had to be moved up from Microsoft.Common.CurrentVersion.targets
+      in order for the $(MSBuildProjectExtensionsPath) to use it as a default.
+  -->
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(BaseIntermediateOutputPath)', 'obj'))))</BaseIntermediateOutputPath>
+    <_InitialBaseIntermediateOutputPath>$(BaseIntermediateOutputPath)</_InitialBaseIntermediateOutputPath>
+  </PropertyGroup>
+
+  <!--
       Prepare to import project extensions which usually come from packages.  Package management systems will create a file at:
         $(MSBuildProjectExtensionsPath)\$(MSBuildProjectFile).<SomethingUnique>.props
 
@@ -40,13 +49,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       management system can write out multiple files but the order of the import is alphabetic because MSBuild sorts the list.
   -->
   <PropertyGroup>
-    <!--
-        The declaration of $(BaseIntermediateOutputPath) had to be moved up from Microsoft.Common.CurrentVersion.targets
-        in order for the $(MSBuildProjectExtensionsPath) to use it as a default.
-    -->
-    <BaseIntermediateOutputPath>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(BaseIntermediateOutputPath)', 'obj'))))</BaseIntermediateOutputPath>
-    <_InitialBaseIntermediateOutputPath>$(BaseIntermediateOutputPath)</_InitialBaseIntermediateOutputPath>
-
     <MSBuildProjectExtensionsPath>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(MSBuildProjectExtensionsPath)', '$(BaseIntermediateOutputPath)'))))</MSBuildProjectExtensionsPath>
     <!--
         Import paths that are relative default to be relative to the importing file.  However, since MSBuildExtensionsPath
@@ -55,7 +57,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     -->
     <MSBuildProjectExtensionsPath Condition="!$([System.IO.Path]::IsPathRooted('$(MSBuildProjectExtensionsPath)'))">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(MSBuildProjectExtensionsPath)'))</MSBuildProjectExtensionsPath>
     <ImportProjectExtensionProps Condition="'$(ImportProjectExtensionProps)' == ''">true</ImportProjectExtensionProps>
-    <_InitialMSBuildProjectExtensionsPath Condition=" '$(ImportProjectExtensionProps)' == 'true' ">$(MSBuildProjectExtensionsPath)</_InitialMSBuildProjectExtensionsPath>
+    <_InitialMSBuildProjectExtensionsPath Condition="'$(ImportProjectExtensionProps)' == 'true'">$(MSBuildProjectExtensionsPath)</_InitialMSBuildProjectExtensionsPath>
   </PropertyGroup>
 
   <Import Project="$(MSBuildProjectExtensionsPath)$(MSBuildProjectFile).*.props" Condition="'$(ImportProjectExtensionProps)' == 'true' and exists('$(MSBuildProjectExtensionsPath)')" />
