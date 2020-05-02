@@ -481,7 +481,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <!-- Output location for publish target. -->
   <PropertyGroup>
-    <PublishDir>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(PublishDir)', 'publish'))))</PublishDir>
+    <PublishDirName Condition="'$(PublishDirName)' == ''">publish</PublishDirName>
+    <PublishDir>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(PublishDir)', '$(PublishDirName)'))))</PublishDir>
     <PublishDir Condition="$([System.IO.Path]::IsPathRooted('$(PublishDir)')) and !$(PublishDir.StartsWith('$(MSBuildProjectDirectory)'))">$([MSBuild]::NormalizeDirectory('$(PublishDir)', '$(MSBuildProjectName)'))</PublishDir>
   </PropertyGroup>
 

@@ -37,7 +37,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       and across multiple projects. Also for the $(MSBuildProjectExtensionsPath) to use it as a common root.
   -->
   <PropertyGroup>
-    <BuildDir>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(BuildDir)', 'build'))))</BuildDir>
+    <BuildDirName Condition="'$(BuildDirName)' == ''">build</BuildDirName>
+    <BuildDir>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(BuildDir)', '$(BuildDirName)'))))</BuildDir>
     <BuildDir Condition="$([System.IO.Path]::IsPathRooted('$(BuildDir)')) and !$(BuildDir.StartsWith('$(MSBuildProjectDirectory)'))">$([MSBuild]::NormalizeDirectory('$(BuildDir)', '$(MSBuildProjectName)'))</BuildDir>
     <_InitialBuildDir>$(BuildDir)</_InitialBuildDir>
   </PropertyGroup>
