@@ -822,11 +822,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <Message Condition="'$(DesignTimeBuild)' != 'true'" Text="Configuration=$(Configuration)" Importance="Low" />
     <Message Condition="'$(DesignTimeBuild)' != 'true'" Text="Platform=$(Platform)" Importance="Low" />
 
-    <!-- Although we try to ensure a trailing slash, it's possible to circumvent this if the property is set on the command line -->
-    <Error Condition="'$(OutDir)' != '' and !HasTrailingSlash('$(OutDir)')" Text="The 'OutDir' property must end with a trailing slash." />
-    <Error Condition="'$(IntermediateOutputPath)' != '' and !HasTrailingSlash('$(IntermediateOutputPath)')" Text="The 'IntermediateOutputPath' must end with a trailing slash." />
-    <Error Condition="'$(BaseIntermediateOutputPath)' != '' and !HasTrailingSlash('$(BaseIntermediateOutputPath)')" Text="The 'BaseIntermediateOutputPath' must end with a trailing slash." />
-
     <!--
       Also update the value of PlatformTargetAsMSBuildArchitecture per the value of Prefer32Bit.  We are doing
       this here because Prefer32Bit may be set anywhere in the targets, so we can't depend on it having the
@@ -836,15 +831,42 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <PlatformTargetAsMSBuildArchitecture>x86</PlatformTargetAsMSBuildArchitecture>
     </PropertyGroup>
 
+  </Target>
+
+  <!--
+    ============================================================
+                  _CheckForInvalidOutputPaths
+
+    This target checks for errors in statically defined output path properties.
+    By setting BeforeTargets, we try to ensure that the target runs before any build related targets.
+
+    If your target requires this check and is running as a BeforeTargets of one of the first targets
+    of $(BuildDependsOn), $(RebuildDependsOn), or $(CleanDependsOn) you will need to set your DependsOn
+    to this target.
+    ============================================================
+  -->
+  <Target
+      Name="_CheckForInvalidOutputPaths"
+      BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
+
+    <!-- Although we try to ensure a trailing slash, it's possible to circumvent this if the property is set on the command line -->
+    <Error Condition="'$(BaseIntermediateOutputPath)' != '' and !HasTrailingSlash('$(BaseIntermediateOutputPath)')" Text="The 'BaseIntermediateOutputPath' must end with a trailing slash." />
+    <Error Condition="'$(IntermediateOutputPath)' != '' and !HasTrailingSlash('$(IntermediateOutputPath)')" Text="The 'IntermediateOutputPath' must end with a trailing slash." />
+    <Error Condition="'$(OutDir)' != '' and !HasTrailingSlash('$(OutDir)')" Text="The 'OutDir' property must end with a trailing slash." />
+
+    <PropertyGroup>
+      <_SetBuildDirsCommonText>To set this property, you must do so before 'Microsoft.Common.props' is imported, for example by using 'Directory.Build.props'.  For more information, please visit https://go.microsoft.com/fwlink/?linkid=869650</_SetBuildDirsCommonText>
+      <_ProjectExtensionsPathMismatchErrorText>The value of the property 'MSBuildProjectExtensionsPath' was modified after it was used by MSBuild which can lead to unexpected build results.</_ProjectExtensionsPathMismatchErrorText>
+      <_BuildDirMismatchWarningText>The value of the property 'BuildDir' was modified after it was used by MSBuild which can lead to unexpected build results. Tools such as NuGet will write outputs to the path specified by the 'MSBuildProjectExtensionsPath' instead.</_BuildDirMismatchWarningText>
+    </PropertyGroup>
+
     <!--
       Log an error if the user set MSBuildProjectExtensionsPath in the body of a project. In an SDK style project
       if you set a value in the body, the value is not used by the top implicit import but is used by the bottom.
       This can lead to confusing behavior and builds can fail for obscure reasons.
     -->
-    <Error Condition=" '$(_InitialMSBuildProjectExtensionsPath)' != '' And '$(MSBuildProjectExtensionsPath)' != '$(_InitialMSBuildProjectExtensionsPath)' "
-           Code="MSB3540"
-           Text="The value of the property &quot;MSBuildProjectExtensionsPath&quot; was modified after it was used by MSBuild which can lead to unexpected build results.  To set this property, you must do so before Microsoft.Common.props is imported, for example by using Directory.Build.props.  For more information, please visit https://go.microsoft.com/fwlink/?linkid=869650"
-            />
+    <Error Condition="'$(_InitialMSBuildProjectExtensionsPath)' != '' And '$(MSBuildProjectExtensionsPath)' != '$(_InitialMSBuildProjectExtensionsPath)'"
+           Code="MSB3540" Text="$(_ProjectExtensionsPathMismatchErrorText)  $(_SetBuildDirsCommonText)" />
 
     <!--
       Log a warning if:
@@ -855,10 +877,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       Similar to the error above, there are cases when users set $(BuildDir) in the body of their project and things build but only by coincidence.
       MSBuild does not know if $(BuildDir) changing would cause problems so tools like NuGet must set $(EnableBuildDirMismatchWarning) to 'true'.
     -->
-    <Warning Condition=" '$(EnableBuildDirMismatchWarning)' == 'true' And '$(_InitialBuildDir)' != '$(BuildDir)' And '$(BuildDir)' != '$(MSBuildProjectExtensionsPath)' "
-             Code="MSB3539"
-             Text="The value of the property &quot;BuildDir&quot; was modified after it was used by MSBuild which can lead to unexpected build results. Tools such as NuGet will write outputs to the path specified by the &quot;MSBuildProjectExtensionsPath&quot; instead. To set this property, you must do so before Microsoft.Common.props is imported, for example by using Directory.Build.props.  For more information, please visit https://go.microsoft.com/fwlink/?linkid=869650"
-             />
+    <Warning Condition="'$(EnableBuildDirMismatchWarning)' == 'true' And '$(_InitialBuildDir)' != '$(BuildDir)' And '$(BuildDir)' != '$(MSBuildProjectExtensionsPath)'"
+             Code="MSB3539" Text="$(_BuildDirMismatchWarningText)  $(_SetBuildDirsCommonText)" />
+
   </Target>
 
   <!--
