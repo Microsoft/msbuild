@@ -38,6 +38,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <PropertyGroup>
     <BuildDir>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(BuildDir)', 'build'))))</BuildDir>
+    <BuildDir Condition="$([System.IO.Path]::IsPathRooted('$(BuildDir)')) and !$(BuildDir.StartsWith('$(MSBuildProjectDirectory)'))">$([MSBuild]::NormalizeDirectory('$(BuildDir)', '$(MSBuildProjectName)'))</BuildDir>
     <_InitialBuildDir>$(BuildDir)</_InitialBuildDir>
   </PropertyGroup>
 

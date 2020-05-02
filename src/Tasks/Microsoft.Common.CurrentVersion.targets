@@ -482,6 +482,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- Output location for publish target. -->
   <PropertyGroup>
     <PublishDir>$([MSBuild]::EnsureTrailingSlash($([MSBuild]::ValueOrDefault('$(PublishDir)', 'publish'))))</PublishDir>
+    <PublishDir Condition="$([System.IO.Path]::IsPathRooted('$(PublishDir)')) and !$(PublishDir.StartsWith('$(MSBuildProjectDirectory)'))">$([MSBuild]::NormalizeDirectory('$(PublishDir)', '$(MSBuildProjectName)'))</PublishDir>
   </PropertyGroup>
 
   <!--
@@ -5529,9 +5530,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target
       Name="CleanPublishFolder">
 
+    <PropertyGroup>
+      <_DefaultPublishDir>$([MSBuild]::EnsureTrailingSlash('publish'))</_DefaultPublishDir>
+    </PropertyGroup>
+
     <RemoveDir
         Directories="$(PublishDir)"
-        Condition="'$(PublishDir)' == '$([MSBuild]::EnsureTrailingSlash(`publish`))' and Exists('$(PublishDir)')"/>
+        Condition="'$(PublishDir)' == '$(_DefaultPublishDir)' and Exists('$(PublishDir)')"/>
 
   </Target>
 
