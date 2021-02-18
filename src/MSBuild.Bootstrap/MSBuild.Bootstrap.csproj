@@ -36,7 +36,7 @@
 
     <Content Include="$(MSBuildExtensionsPath)\**\*" LinkBase="Extensions" CopyToOutputDirectory="PreserveNewest" />
 
-    <Content Include="$(RepoRoot).dotnet\sdk\$(DotNetCliVersion)\RuntimeIdentifierGraph.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(RuntimeIdentifierGraphPath)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(MonoBuild)' != 'true'">
