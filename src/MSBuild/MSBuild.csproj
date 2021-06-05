@@ -273,8 +273,8 @@
           BeforeTargets="AssignTargetPaths"
           Condition="'$(MonoBuild)' != 'true'">
     <ItemGroup>
-      <Content Include="$(NuGetPackageRoot)\netstandard.library\2.0.3\build\netstandard2.0\ref\netstandard.dll" Link="ref\netstandard.dll" CopyToOutputDirectory="PreserveNewest" />
-      <Content Include="$(NuGetPackageRoot)\netstandard.library\2.0.3\build\netstandard2.0\ref\mscorlib.dll" Link="ref\mscorlib.dll" CopyToOutputDirectory="PreserveNewest" />
+      <Content Include="$(NuGetPackageRoot)\microsoft.netcore.app.runtime.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)\runtimes\$(NETCoreSdkRuntimeIdentifier)\lib\net6.0\netstandard.dll" Link="ref\netstandard.dll" CopyToOutputDirectory="PreserveNewest" />
+      <Content Include="$(NuGetPackageRoot)\microsoft.netcore.app.runtime.$(NETCoreSdkRuntimeIdentifier)\$(BundledNETCoreAppPackageVersion)\runtimes\$(NETCoreSdkRuntimeIdentifier)\lib\net6.0\mscorlib.dll" Link="ref\mscorlib.dll" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
 
