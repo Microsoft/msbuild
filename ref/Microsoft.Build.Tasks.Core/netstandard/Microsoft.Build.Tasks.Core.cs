@@ -1982,10 +1982,15 @@ namespace Microsoft.Build.Tasks.Deployment.ManifestUtilities
     [System.Runtime.InteropServices.ComVisibleAttribute(false)]
     public static partial class SecurityUtilities
     {
+        [System.Runtime.Versioning.SupportedOSPlatformAttribute("windows")]
         public static void SignFile(System.Security.Cryptography.X509Certificates.X509Certificate2 cert, System.Uri timestampUrl, string path) { }
+        [System.Runtime.Versioning.SupportedOSPlatformAttribute("windows")]
         public static void SignFile(string certPath, System.Security.SecureString certPassword, System.Uri timestampUrl, string path) { }
+        [System.Runtime.Versioning.SupportedOSPlatformAttribute("windows")]
         public static void SignFile(string certThumbprint, System.Uri timestampUrl, string path) { }
+        [System.Runtime.Versioning.SupportedOSPlatformAttribute("windows")]
         public static void SignFile(string certThumbprint, System.Uri timestampUrl, string path, string targetFrameworkVersion) { }
+        [System.Runtime.Versioning.SupportedOSPlatformAttribute("windows")]
         public static void SignFile(string certThumbprint, System.Uri timestampUrl, string path, string targetFrameworkVersion, string targetFrameworkIdentifier) { }
     }
     [System.Runtime.InteropServices.ComVisibleAttribute(false)]
