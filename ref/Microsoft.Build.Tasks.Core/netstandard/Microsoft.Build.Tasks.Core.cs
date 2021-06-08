@@ -885,6 +885,7 @@ namespace Microsoft.Build.Tasks
         public string TargetFrameworkIdentifier { get { throw null; } set { } }
         public string TargetFrameworkVersion { get { throw null; } set { } }
         public string TimestampUrl { get { throw null; } set { } }
+        [System.Runtime.Versioning.SupportedOSPlatformAttribute("windows")]
         public override bool Execute() { throw null; }
     }
     public abstract partial class TaskExtension : Microsoft.Build.Utilities.Task
