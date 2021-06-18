@@ -101,12 +101,6 @@ folder InstallDir:\MSBuild\Current\Bin\de
   file source=$(X86BinPath)de\Microsoft.Build.Utilities.Core.resources.dll vs.file.ngenArchitecture=all
   file source=$(X86BinPath)de\MSBuild.resources.dll vs.file.ngenArchitecture=all
   file source=$(TaskHostBinPath)de\MSBuildTaskHost.resources.dll vs.file.ngenArchitecture=all
-folder InstallDir:\MSBuild\Current\Bin\en
-  file source=$(X86BinPath)en\Microsoft.Build.resources.dll vs.file.ngenArchitecture=all
-  file source=$(X86BinPath)en\Microsoft.Build.Tasks.Core.resources.dll vs.file.ngenArchitecture=all
-  file source=$(X86BinPath)en\Microsoft.Build.Utilities.Core.resources.dll vs.file.ngenArchitecture=all
-  file source=$(X86BinPath)en\MSBuild.resources.dll vs.file.ngenArchitecture=all
-  file source=$(TaskHostBinPath)en\MSBuildTaskHost.resources.dll vs.file.ngenArchitecture=all
 folder InstallDir:\MSBuild\Current\Bin\es
   file source=$(X86BinPath)es\Microsoft.Build.resources.dll vs.file.ngenArchitecture=all
   file source=$(X86BinPath)es\Microsoft.Build.Tasks.Core.resources.dll vs.file.ngenArchitecture=all
@@ -245,12 +239,6 @@ folder InstallDir:\MSBuild\Current\Bin\amd64\de
   file source=$(X64BinPath)de\Microsoft.Build.Utilities.Core.resources.dll vs.file.ngenArchitecture=all
   file source=$(X64BinPath)de\MSBuild.resources.dll vs.file.ngenArchitecture=all
   file source=$(TaskHostX64BinPath)de\MSBuildTaskHost.resources.dll vs.file.ngenArchitecture=all
-folder InstallDir:\MSBuild\Current\Bin\amd64\en
-  file source=$(X64BinPath)en\Microsoft.Build.resources.dll vs.file.ngenArchitecture=all
-  file source=$(X64BinPath)en\Microsoft.Build.Tasks.Core.resources.dll vs.file.ngenArchitecture=all
-  file source=$(X64BinPath)en\Microsoft.Build.Utilities.Core.resources.dll vs.file.ngenArchitecture=all
-  file source=$(X64BinPath)en\MSBuild.resources.dll vs.file.ngenArchitecture=all
-  file source=$(TaskHostX64BinPath)en\MSBuildTaskHost.resources.dll vs.file.ngenArchitecture=all
 folder InstallDir:\MSBuild\Current\Bin\amd64\es
   file source=$(X64BinPath)es\Microsoft.Build.resources.dll vs.file.ngenArchitecture=all
   file source=$(X64BinPath)es\Microsoft.Build.Tasks.Core.resources.dll vs.file.ngenArchitecture=all
