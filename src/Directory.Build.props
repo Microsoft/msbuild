@@ -39,9 +39,6 @@
     <!-- Don't automatically append target framework to output path, since we want to put the Platform Target beforehand, if it's not AnyCPU -->
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
-    <!-- Create English satellite assemblies (which shouldn't be required, but preserves previous build behavior) -->
-    <XlfLanguages>en;cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant</XlfLanguages>
-
     <ErrorOnOutOfDateXlf>true</ErrorOnOutOfDateXlf>
 
     <!-- Workaround that can be removed when we update machines to 15.6.

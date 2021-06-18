@@ -22,7 +22,6 @@
     <!-- MSBuild.dll -->
     <file src="cs\MSBuild.resources.dll" target="lib\netstandard1.3\cs\MSBuild.resources.dll"/>
     <file src="de\MSBuild.resources.dll" target="lib\netstandard1.3\de\MSBuild.resources.dll"/>
-    <file src="en\MSBuild.resources.dll" target="lib\netstandard1.3\en\MSBuild.resources.dll"/>
     <file src="es\MSBuild.resources.dll" target="lib\netstandard1.3\es\MSBuild.resources.dll"/>
     <file src="fr\MSBuild.resources.dll" target="lib\netstandard1.3\fr\MSBuild.resources.dll"/>
     <file src="it\MSBuild.resources.dll" target="lib\netstandard1.3\it\MSBuild.resources.dll"/>
@@ -38,7 +37,6 @@
     <!-- Microsoft.Build.dll-->
     <file src="cs\Microsoft.Build.resources.dll" target="lib\netstandard1.3\cs\Microsoft.Build.resources.dll" />
     <file src="de\Microsoft.Build.resources.dll" target="lib\netstandard1.3\de\Microsoft.Build.resources.dll" />
-    <file src="en\Microsoft.Build.resources.dll" target="lib\netstandard1.3\en\Microsoft.Build.resources.dll" />
     <file src="es\Microsoft.Build.resources.dll" target="lib\netstandard1.3\es\Microsoft.Build.resources.dll" />
     <file src="fr\Microsoft.Build.resources.dll" target="lib\netstandard1.3\fr\Microsoft.Build.resources.dll" />
     <file src="it\Microsoft.Build.resources.dll" target="lib\netstandard1.3\it\Microsoft.Build.resources.dll" />
@@ -54,7 +52,6 @@
     <!-- Microsoft.Build.Tasks.Core.dll-->
     <file src="cs\Microsoft.Build.Tasks.Core.resources.dll" target="lib\netstandard1.3\cs\Microsoft.Build.Tasks.Core.resources.dll" />
     <file src="de\Microsoft.Build.Tasks.Core.resources.dll" target="lib\netstandard1.3\de\Microsoft.Build.Tasks.Core.resources.dll" />
-    <file src="en\Microsoft.Build.Tasks.Core.resources.dll" target="lib\netstandard1.3\en\Microsoft.Build.Tasks.Core.resources.dll" />
     <file src="es\Microsoft.Build.Tasks.Core.resources.dll" target="lib\netstandard1.3\es\Microsoft.Build.Tasks.Core.resources.dll" />
     <file src="fr\Microsoft.Build.Tasks.Core.resources.dll" target="lib\netstandard1.3\fr\Microsoft.Build.Tasks.Core.resources.dll" />
     <file src="it\Microsoft.Build.Tasks.Core.resources.dll" target="lib\netstandard1.3\it\Microsoft.Build.Tasks.Core.resources.dll" />
@@ -70,7 +67,6 @@
     <!-- Microsoft.Build.Utilities.Core.dll-->
     <file src="cs\Microsoft.Build.Utilities.Core.resources.dll" target="lib\netstandard1.3\cs\Microsoft.Build.Utilities.Core.resources.dll" />
     <file src="de\Microsoft.Build.Utilities.Core.resources.dll" target="lib\netstandard1.3\de\Microsoft.Build.Utilities.Core.resources.dll" />
-    <file src="en\Microsoft.Build.Utilities.Core.resources.dll" target="lib\netstandard1.3\en\Microsoft.Build.Utilities.Core.resources.dll" />
     <file src="es\Microsoft.Build.Utilities.Core.resources.dll" target="lib\netstandard1.3\es\Microsoft.Build.Utilities.Core.resources.dll" />
     <file src="fr\Microsoft.Build.Utilities.Core.resources.dll" target="lib\netstandard1.3\fr\Microsoft.Build.Utilities.Core.resources.dll" />
     <file src="it\Microsoft.Build.Utilities.Core.resources.dll" target="lib\netstandard1.3\it\Microsoft.Build.Utilities.Core.resources.dll" />
