@@ -1647,6 +1647,19 @@ namespace Microsoft.Build.CommandLine
             switchesNotFromAutoResponseFile = new CommandLineSwitches();
             GatherCommandLineSwitches(commandLineArgs, switchesNotFromAutoResponseFile);
 
+            // special feature: any value of an environment variable "_MSBUILD_"
+            // gets treated as switches that override any other switches
+            string extraCommandLine = Environment.GetEnvironmentVariable("_MSBUILD_");
+            if (!String.IsNullOrWhiteSpace(extraCommandLine))
+            {
+                // we have to split these into individual arguments, as we do for response file content,
+                // since the shell didn't do this for us; also expand environment variables, to be consistent
+                // with response file content
+                ArrayList extraArgs = QuotingUtilities.SplitUnquoted(Environment.ExpandEnvironmentVariables(extraCommandLine));
+                // we want these last in the non-response file switches, so they win over all other switches
+                GatherCommandLineSwitches(extraArgs, switchesNotFromAutoResponseFile);
+            }
+
             // parse the auto-response file (if "/noautoresponse" is not specified), and combine those switches with the
             // switches on the command line
             switchesFromAutoResponseFile = new CommandLineSwitches();
