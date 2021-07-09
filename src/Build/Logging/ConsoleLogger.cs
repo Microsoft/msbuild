@@ -164,8 +164,6 @@ namespace Microsoft.Build.Logging
                 _parameters = null;
             }
 
-            
-
             _consoleLogger.SkipProjectStartedText = _skipProjectStartedText;
         }
 
@@ -475,6 +473,30 @@ namespace Microsoft.Build.Logging
             InitializeBaseConsoleLogger(); // for compat: see DDB#136924
 
             _consoleLogger.CustomEventHandler(sender, e);
+        }
+
+        /// <summary>
+        /// Returns the minimum importance of messages logged by this logger.
+        /// </summary>
+        /// <returns>
+        /// The minimum message importance corresponding to this logger's verbosity or (MessageImportance.High - 1)
+        /// if this logger does not log messages of any importance.
+        /// </returns>
+        internal MessageImportance GetMinimumMessageImportance()
+        {
+            if (Verbosity >= BaseConsoleLogger.ImportanceToMinimumVerbosity(MessageImportance.Low, out _))
+            {
+                return MessageImportance.Low;
+            }
+            else if (Verbosity >= BaseConsoleLogger.ImportanceToMinimumVerbosity(MessageImportance.Normal, out _))
+            {
+                return MessageImportance.Normal;
+            }
+            else if (Verbosity >= BaseConsoleLogger.ImportanceToMinimumVerbosity(MessageImportance.High, out _))
+            {
+                return MessageImportance.High;
+            }
+            return MessageImportance.High - 1;
         }
 
         #endregion

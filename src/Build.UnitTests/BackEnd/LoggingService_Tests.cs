@@ -665,6 +665,11 @@ namespace Microsoft.Build.UnitTests.Logging
             Assert.Equal(1, loggingService.MaxCPUCount);
             loggingService.MaxCPUCount = 5;
             Assert.Equal(5, loggingService.MaxCPUCount);
+
+            // Test MinimumRequiredMessageImportance
+            Assert.Equal(MessageImportance.Low, loggingService.MinimumRequiredMessageImportance);
+            loggingService.RegisterLogger(new ConsoleLogger(LoggerVerbosity.Normal));
+            Assert.Equal(MessageImportance.Normal, loggingService.MinimumRequiredMessageImportance);
         }
 
         #endregion
@@ -717,6 +722,8 @@ namespace Microsoft.Build.UnitTests.Logging
         }
 
         #endregion
+
+        #region WarningsAsErrors Tests
 
         private static readonly BuildWarningEventArgs BuildWarningEventForTreatAsErrorOrMessageTests = new BuildWarningEventArgs("subcategory", "C94A41A90FFB4EF592BF98BA59BEE8AF", "file", 1, 2, 3, 4, "message", "helpKeyword", "senderName");
 
@@ -1000,6 +1007,76 @@ namespace Microsoft.Build.UnitTests.Logging
             return logger;
         }
 
+        #endregion
+
+        #region MinimumRequiredMessageImportance Tests
+
+        [Fact]
+        public void ImportanceReflectsConsoleLoggerVerbosity()
+        {
+            _initializedService.RegisterLogger(new ConsoleLogger(LoggerVerbosity.Quiet));
+            _initializedService.MinimumRequiredMessageImportance.ShouldBe(MessageImportance.High - 1);
+            _initializedService.RegisterLogger(new ConsoleLogger(LoggerVerbosity.Minimal));
+            _initializedService.MinimumRequiredMessageImportance.ShouldBe(MessageImportance.High);
+            _initializedService.RegisterLogger(new ConsoleLogger(LoggerVerbosity.Normal));
+            _initializedService.MinimumRequiredMessageImportance.ShouldBe(MessageImportance.Normal);
+            _initializedService.RegisterLogger(new ConsoleLogger(LoggerVerbosity.Detailed));
+            _initializedService.MinimumRequiredMessageImportance.ShouldBe(MessageImportance.Low);
+            _initializedService.RegisterLogger(new ConsoleLogger(LoggerVerbosity.Diagnostic));
+            _initializedService.MinimumRequiredMessageImportance.ShouldBe(MessageImportance.Low);
+        }
+
+        [Fact]
+        public void ImportanceReflectsConfigurableForwardingLoggerVerbosity()
+        {
+            _initializedService.RegisterLogger(CreateConfigurableForwardingLogger(LoggerVerbosity.Quiet));
+            _initializedService.MinimumRequiredMessageImportance.ShouldBe(MessageImportance.High - 1);
+            _initializedService.RegisterLogger(CreateConfigurableForwardingLogger(LoggerVerbosity.Minimal));
+            _initializedService.MinimumRequiredMessageImportance.ShouldBe(MessageImportance.High);
+            _initializedService.RegisterLogger(CreateConfigurableForwardingLogger(LoggerVerbosity.Normal));
+            _initializedService.MinimumRequiredMessageImportance.ShouldBe(MessageImportance.Normal);
+            _initializedService.RegisterLogger(CreateConfigurableForwardingLogger(LoggerVerbosity.Detailed));
+            _initializedService.MinimumRequiredMessageImportance.ShouldBe(MessageImportance.Low);
+            _initializedService.RegisterLogger(CreateConfigurableForwardingLogger(LoggerVerbosity.Diagnostic));
+            _initializedService.MinimumRequiredMessageImportance.ShouldBe(MessageImportance.Low);
+        }
+
+        [Fact]
+        public void ImportanceReflectsCentralForwardingLoggerVerbosity()
+        {
+            MockHost mockHost = new MockHost();
+            ILoggingService node1LoggingService = LoggingService.CreateLoggingService(LoggerMode.Synchronous, 1);
+            ((IBuildComponent)node1LoggingService).InitializeComponent(mockHost);
+            ILoggingService node2LoggingService = LoggingService.CreateLoggingService(LoggerMode.Synchronous, 2);
+            ((IBuildComponent)node2LoggingService).InitializeComponent(mockHost);
+
+            // CentralForwardingLogger is always registered in in-proc nodes and it does not affect minimum importance.
+            node1LoggingService.RegisterLogger(CreateConfigurableForwardingLogger(LoggerVerbosity.Minimal));
+            node1LoggingService.RegisterLogger(new CentralForwardingLogger());
+            node1LoggingService.MinimumRequiredMessageImportance.ShouldBe(MessageImportance.High);
+
+            // CentralForwardingLogger in out-of-proc nodes means that we are forwarding everything and the minimum importance
+            // is Low regardless of what other loggers are registered.
+            node2LoggingService.RegisterLogger(CreateConfigurableForwardingLogger(LoggerVerbosity.Minimal));
+            node2LoggingService.RegisterLogger(new CentralForwardingLogger());
+            node2LoggingService.MinimumRequiredMessageImportance.ShouldBe(MessageImportance.Low);
+            // Register another ConsoleLogger and verify that minimum importance hasn't changed.
+            node2LoggingService.RegisterLogger(CreateConfigurableForwardingLogger(LoggerVerbosity.Minimal));
+            node2LoggingService.MinimumRequiredMessageImportance.ShouldBe(MessageImportance.Low);
+        }
+
+        [Fact]
+        public void ImportanceReflectsUnknownLoggerVerbosity()
+        {
+            // Minimum message importance is Low (i.e. we're logging everything) even when all registered loggers have
+            // Normal verbosity if at least of one them is not on our whitelist.
+            _initializedService.RegisterLogger(new ConsoleLogger(LoggerVerbosity.Normal));
+            _initializedService.RegisterLogger(new MockLogger() { Verbosity = LoggerVerbosity.Normal });
+            _initializedService.RegisterLogger(CreateConfigurableForwardingLogger(LoggerVerbosity.Normal));
+            _initializedService.MinimumRequiredMessageImportance.ShouldBe(MessageImportance.Low);
+        }
+        #endregion
+
         #region PrivateMethods
 
         /// <summary>
@@ -1083,6 +1160,17 @@ namespace Microsoft.Build.UnitTests.Logging
                                                                               LoggerVerbosity.Diagnostic /*Not used, but the spirit of the logger is to forward everything so this is the most appropriate verbosity */
                                                                              );
             return centralLoggerDescrption;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ConfigurableForwardingLogger"/> with the given verbosity.
+        /// </summary>
+        private ConfigurableForwardingLogger CreateConfigurableForwardingLogger(LoggerVerbosity verbosity)
+        {
+            return new ConfigurableForwardingLogger()
+            {
+                Verbosity = verbosity
+            };
         }
         #endregion
 

@@ -497,28 +497,8 @@ namespace Microsoft.Build.BackEnd.Logging
         /// </summary>
         public override void MessageHandler(object sender, BuildMessageEventArgs e)
         {
-            bool print = false;
-            bool lightenText = false;
-            switch (e.Importance)
-            {
-                case MessageImportance.High:
-                    print = IsVerbosityAtLeast(LoggerVerbosity.Minimal);
-                    break;
-
-                case MessageImportance.Normal:
-                    print = IsVerbosityAtLeast(LoggerVerbosity.Normal);
-                    lightenText = true;
-                    break;
-
-                case MessageImportance.Low:
-                    print = IsVerbosityAtLeast(LoggerVerbosity.Detailed);
-                    lightenText = true;
-                    break;
-
-                default:
-                    ErrorUtilities.VerifyThrow(false, "Impossible");
-                    break;
-            }
+            LoggerVerbosity minimumVerbosity = ImportanceToMinimumVerbosity(e.Importance, out bool lightenText);
+            bool print = IsVerbosityAtLeast(minimumVerbosity);
 
             if (print)
             {

@@ -156,9 +156,9 @@ namespace Microsoft.Build.Utilities
         /// </summary>
         public bool HasLoggedErrors { get; private set; }
 
-#endregion
+        #endregion
 
-#region Utility methods
+        #region Utility methods
 
         /// <summary>
         /// Extracts the message code (if any) prefixed to the given message string. Message code prefixes must match the
@@ -235,9 +235,20 @@ namespace Microsoft.Build.Utilities
             string resourceString = FormatResourceString(resourceName, null);
             return resourceString;
         }
-#endregion
+        #endregion
 
-#region Message logging methods
+        #region Message logging methods
+
+        /// <summary>
+        /// Returns true if a message of given importance should be logged because it is possible that a logger consuming it exists.
+        /// </summary>
+        /// <param name="importance">The importance to check.</param>
+        /// <returns>True if messages of the given importance should be logged, false if it's guaranteed that such messages would be ignored.</returns>
+        public bool LogsMessagesOfImportance(MessageImportance importance)
+        {
+            return BuildEngine is not IBuildEngine10 buildEngine10
+                || buildEngine10.EngineInterface.LogsMessagesOfImportance(importance);
+        }
 
         /// <summary>
         /// Logs a message using the specified string.
@@ -279,6 +290,10 @@ namespace Microsoft.Build.Utilities
                 ResourceUtilities.FormatString(message, messageArgs);
             }
 #endif
+            if (!LogsMessagesOfImportance(importance))
+            {
+                return;
+            }
 
             BuildMessageEventArgs e = new BuildMessageEventArgs
                 (
@@ -342,6 +357,11 @@ namespace Microsoft.Build.Utilities
         {
             // No lock needed, as BuildEngine methods from v4.5 onwards are thread safe.
             ErrorUtilities.VerifyThrowArgumentNull(message, nameof(message));
+
+            if (!LogsMessagesOfImportance(importance))
+            {
+                return;
+            }
 
             // If BuildEngine is null, task attempted to log before it was set on it,
             // presumably in its constructor. This is not allowed, and all
@@ -470,6 +490,11 @@ namespace Microsoft.Build.Utilities
             // global state.
             ErrorUtilities.VerifyThrowArgumentNull(messageResourceName, nameof(messageResourceName));
 
+            if (!LogsMessagesOfImportance(importance))
+            {
+                return;
+            }
+
             LogMessage(importance, GetResourceMessage(messageResourceName), messageArgs);
 #if DEBUG
             // Assert that the message does not contain an error code.  Only errors and warnings
@@ -551,6 +576,11 @@ namespace Microsoft.Build.Utilities
         {
             // No lock needed, as BuildEngine methods from v4.5 onwards are thread safe.
             ErrorUtilities.VerifyThrowArgumentNull(commandLine, nameof(commandLine));
+
+            if (!LogsMessagesOfImportance(importance))
+            {
+                return;
+            }
 
             var e = new TaskCommandLineEventArgs(commandLine, TaskName, importance);
 

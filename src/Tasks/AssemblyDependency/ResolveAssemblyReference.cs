@@ -1247,7 +1247,8 @@ namespace Microsoft.Build.Tasks
             }
 
 #if FEATURE_WIN32_REGISTRY
-            if (dependencyTable.Resolvers != null)
+            MessageImportance messageImportance = MessageImportance.Low;
+            if (dependencyTable.Resolvers != null && Log.LogsMessagesOfImportance(messageImportance))
             {
                 foreach (Resolver r in dependencyTable.Resolvers)
                 {
@@ -1255,7 +1256,6 @@ namespace Microsoft.Build.Tasks
                     {
                         AssemblyFoldersEx assemblyFoldersEx = ((AssemblyFoldersExResolver)r).AssemblyFoldersExLocations;
 
-                        MessageImportance messageImportance = MessageImportance.Low;
                         if (assemblyFoldersEx != null && _showAssemblyFoldersExLocations.TryGetValue(r.SearchPath, out messageImportance))
                         {
                             Log.LogMessageFromResources(messageImportance, "ResolveAssemblyReference.AssemblyFoldersExSearchLocations", r.SearchPath);
@@ -1347,6 +1347,10 @@ namespace Microsoft.Build.Tasks
         {
             // Set an importance level to be used for secondary messages.
             MessageImportance importance = ChooseReferenceLoggingImportance(reference);
+            if (!Log.LogsMessagesOfImportance(importance))
+            {
+                return;
+            }
 
             // Log the fusion name and whether this is a primary or a dependency.
             LogPrimaryOrDependency(reference, fusionName, importance);
@@ -1413,7 +1417,8 @@ namespace Microsoft.Build.Tasks
         /// </summary>
         private void LogInputs()
         {
-            if (Traits.Instance.EscapeHatches.LogTaskInputs || Silent)
+            MessageImportance importance = MessageImportance.Low;
+            if (Traits.Instance.EscapeHatches.LogTaskInputs || Silent || !Log.LogsMessagesOfImportance(importance))
             {
                 // the inputs will be logged automatically anyway, avoid duplication in the logs
                 return;
@@ -1421,7 +1426,6 @@ namespace Microsoft.Build.Tasks
 
             string indent = Strings.FourSpaces;
             string property = Strings.LogTaskPropertyFormat;
-            MessageImportance importance = MessageImportance.Low;
 
             Log.LogMessage(importance, property, "TargetFrameworkMoniker");
             Log.LogMessage(importance, indent + _targetedFrameworkMoniker);

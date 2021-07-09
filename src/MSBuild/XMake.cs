@@ -3133,7 +3133,7 @@ namespace Microsoft.Build.CommandLine
                 LoggerVerbosity defaultFileLoggerVerbosity = LoggerVerbosity.Detailed;
                 fileLogger.Verbosity = defaultFileLoggerVerbosity;
 
-                if (cpuCount == 1)
+                if (cpuCount == 1 && Environment.GetEnvironmentVariable("MSBUILDNOINPROCNODE") != "1")
                 {
                     // We've decided to use the MP logger even in single proc mode.
                     // Switch it on here, rather than in the logger, so that other hosts that use
@@ -3197,7 +3197,7 @@ namespace Microsoft.Build.CommandLine
                     consoleParameters = AggregateParameters(consoleParameters, consoleLoggerParameters);
                 }
 
-                if (cpuCount == 1)
+                if (cpuCount == 1 && Environment.GetEnvironmentVariable("MSBUILDNOINPROCNODE") != "1")
                 {
                     // We've decided to use the MP logger even in single proc mode.
                     // Switch it on here, rather than in the logger, so that other hosts that use

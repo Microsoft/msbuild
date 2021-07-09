@@ -176,6 +176,8 @@ namespace Microsoft.Build.BackEnd
         /// </summary>
         public Scheduler()
         {
+            // Be careful moving these to Traits, changing the timing of reading environment variables has a breaking potential.
+            // https://github.com/dotnet/msbuild/pull/5764
             _debugDumpState = Environment.GetEnvironmentVariable("MSBUILDDEBUGSCHEDULER") == "1";
             _debugDumpPath = Environment.GetEnvironmentVariable("MSBUILDDEBUGPATH");
             _schedulingUnlimitedVariable = Environment.GetEnvironmentVariable("MSBUILDSCHEDULINGUNLIMITED");

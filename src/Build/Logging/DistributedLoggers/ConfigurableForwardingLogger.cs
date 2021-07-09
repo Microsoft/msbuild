@@ -75,7 +75,7 @@ namespace Microsoft.Build.Logging
         /// </summary>
         private void InitializeForwardingTable()
         {
-            _forwardingTable = new Dictionary<string, int>(15, StringComparer.OrdinalIgnoreCase);
+            _forwardingTable = new Dictionary<string, int>(17, StringComparer.OrdinalIgnoreCase);
             _forwardingTable[BuildStartedEventDescription] = 0;
             _forwardingTable[BuildFinishedEventDescription] = 0;
             _forwardingTable[ProjectStartedEventDescription] = 0;
@@ -256,6 +256,30 @@ namespace Microsoft.Build.Logging
             {
                 _forwardingTable[CommandLineDescription] = 1;
             }
+        }
+
+        /// <summary>
+        /// Returns the minimum importance of messages logged by this logger.
+        /// </summary>
+        /// <returns>
+        /// The minimum message importance corresponding to this logger's verbosity or (MessageImportance.High - 1)
+        /// if this logger does not log messages of any importance.
+        /// </returns>
+        internal MessageImportance GetMinimumMessageImportance()
+        {
+            if (_forwardingTable[LowMessageEventDescription] == 1)
+            {
+                return MessageImportance.Low;
+            }
+            if (_forwardingTable[NormalMessageEventDescription] == 1)
+            {
+                return MessageImportance.Normal;
+            }
+            if (_forwardingTable[HighMessageEventDescription] == 1)
+            {
+                return MessageImportance.High;
+            }
+            return MessageImportance.High - 1;
         }
 
         /// <summary>

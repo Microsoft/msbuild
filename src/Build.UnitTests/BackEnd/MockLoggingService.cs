@@ -223,6 +223,11 @@ namespace Microsoft.Build.UnitTests.BackEnd
             set { }
         }
 
+        public MessageImportance MinimumRequiredMessageImportance
+        {
+            get => MessageImportance.Low;
+        }
+
         public void AddWarningsAsMessages(BuildEventContext buildEventContext, ISet<string> codes)
         {
             throw new NotImplementedException();

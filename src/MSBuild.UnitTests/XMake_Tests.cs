@@ -19,6 +19,7 @@ using Xunit.Abstractions;
 using Shouldly;
 using System.IO.Compression;
 using System.Reflection;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.UnitTests
 {
@@ -2322,6 +2323,67 @@ EndGlobal
                 success.ShouldBeTrue(output);
                 output.ShouldContain(testMessage);
             }
+        }
+
+        /// <summary>
+        /// Helper task used by <see cref="EndToEndMinimumMessageImportance"/> to verify <see cref="TaskLoggingHelper.LogsMessagesOfImportance"/>.
+        /// </summary>
+        public class MessageImportanceCheckingTask : Task
+        {
+            public int ExpectedMinimumMessageImportance { get; set; }
+
+            public override bool Execute()
+            {
+                bool shouldLogHigh = Log.LogsMessagesOfImportance(MessageImportance.High);
+                bool shouldLogNormal = Log.LogsMessagesOfImportance(MessageImportance.Normal);
+                bool shouldLogLow = Log.LogsMessagesOfImportance(MessageImportance.Low);
+                return (MessageImportance)ExpectedMinimumMessageImportance switch
+                {
+                    MessageImportance.High - 1 => !shouldLogHigh && !shouldLogNormal && !shouldLogLow,
+                    MessageImportance.High => shouldLogHigh && !shouldLogNormal && !shouldLogLow,
+                    MessageImportance.Normal => shouldLogHigh && shouldLogNormal && !shouldLogLow,
+                    MessageImportance.Low => shouldLogHigh && shouldLogNormal && shouldLogLow,
+                    _ => false
+                };
+            }
+        }
+
+        [Theory]
+        [InlineData("/v:diagnostic", MessageImportance.Low)]
+        [InlineData("/v:detailed", MessageImportance.Low)]
+        [InlineData("/v:normal", MessageImportance.Normal)]
+        [InlineData("/v:minimal", MessageImportance.High)]
+        [InlineData("/v:quiet", MessageImportance.High - 1)]
+        [InlineData("/v:diagnostic /bl", MessageImportance.Low)]
+        [InlineData("/v:detailed /bl", MessageImportance.Low)]
+        [InlineData("/v:normal /bl", MessageImportance.Low)] // v:normal but with binary logger so everything must be logged
+        [InlineData("/v:minimal /bl", MessageImportance.Low)] // v:minimal but with binary logger so everything must be logged
+        [InlineData("/v:quiet /bl", MessageImportance.Low)] // v:quiet but with binary logger so everything must be logged
+        public void EndToEndMinimumMessageImportance(string arguments, MessageImportance expectedMinimumMessageImportance)
+        {
+            using TestEnvironment testEnvironment = UnitTests.TestEnvironment.Create();
+
+            string projectContents = ObjectModelHelpers.CleanupFileContents(@"<Project>
+
+  <UsingTask TaskName=""" + typeof(MessageImportanceCheckingTask).FullName + @""" AssemblyFile=""" + Assembly.GetExecutingAssembly().Location + @"""/>
+
+  <Target Name=""CheckMessageImportance"">
+    <MessageImportanceCheckingTask ExpectedMinimumMessageImportance=""" + (int)expectedMinimumMessageImportance + @""" />
+  </Target>
+
+</Project>");
+
+            TransientTestProjectWithFiles testProject = testEnvironment.CreateTestProjectWithFiles(projectContents);
+
+            // Build in-proc.
+            RunnerUtilities.ExecMSBuild($"{arguments} \"{testProject.ProjectFile}\"", out bool success, _output);
+            success.ShouldBeTrue();
+
+            // Build out-of-proc to exercise both logging code paths.
+            testEnvironment.SetEnvironmentVariable("MSBUILDNOINPROCNODE", "1");
+            testEnvironment.SetEnvironmentVariable("MSBUILDDISABLENODEREUSE", "1");
+            RunnerUtilities.ExecMSBuild($"{arguments} \"{testProject.ProjectFile}\"", out success, _output);
+            success.ShouldBeTrue();
         }
 
 #if FEATURE_ASSEMBLYLOADCONTEXT

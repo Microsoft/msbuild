@@ -332,6 +332,33 @@ namespace Microsoft.Build.BackEnd.Logging
         internal bool IsVerbosityAtLeast(LoggerVerbosity checkVerbosity) => Verbosity >= checkVerbosity;
 
         /// <summary>
+        /// Returns the minimum logger verbosity required to log a message with the given importance.
+        /// </summary>
+        /// <param name="importance">The message importance.</param>
+        /// <param name="lightenText">True if the message should be rendered using lighter colored text.</param>
+        /// <returns>The logger verbosity required to log a message of the given <paramref name="importance"/>.</returns>
+        internal static LoggerVerbosity ImportanceToMinimumVerbosity(MessageImportance importance, out bool lightenText)
+        {
+            switch (importance)
+            {
+                case MessageImportance.High:
+                    lightenText = false;
+                    return LoggerVerbosity.Minimal;
+                case MessageImportance.Normal:
+                    lightenText = true;
+                    return LoggerVerbosity.Normal;
+                case MessageImportance.Low:
+                    lightenText = true;
+                    return LoggerVerbosity.Detailed;
+
+                default:
+                    ErrorUtilities.VerifyThrow(false, "Impossible");
+                    lightenText = false;
+                    return LoggerVerbosity.Detailed;
+            }
+        }
+
+        /// <summary>
         /// Sets foreground color to color specified
         /// </summary>
         internal static void SetColor(ConsoleColor c)

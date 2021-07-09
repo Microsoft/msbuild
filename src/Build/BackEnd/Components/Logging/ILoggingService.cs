@@ -207,6 +207,15 @@ namespace Microsoft.Build.BackEnd.Logging
             set;
         }
 
+        /// <summary>
+        /// Returns the minimum logging importance that must be logged because there is a possibility that
+        /// at least one registered logger consumes it.
+        /// </summary>
+        MessageImportance MinimumRequiredMessageImportance
+        {
+            get;
+        }
+
         #endregion
 
         /// <summary>

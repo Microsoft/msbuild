@@ -3,6 +3,13 @@
 namespace Microsoft.Build.Framework
 {
     public delegate void AnyEventHandler(object sender, Microsoft.Build.Framework.BuildEventArgs e);
+    public abstract partial class BuildEngineInterface
+    {
+        public const int Version1 = 1;
+        protected BuildEngineInterface() { }
+        public virtual int Version { get { throw null; } }
+        public virtual bool LogsMessagesOfImportance(Microsoft.Build.Framework.MessageImportance importance) { throw null; }
+    }
     [System.Runtime.InteropServices.StructLayoutAttribute(System.Runtime.InteropServices.LayoutKind.Sequential)]
     public partial struct BuildEngineResult
     {
@@ -185,6 +192,10 @@ namespace Microsoft.Build.Framework
         void LogErrorEvent(Microsoft.Build.Framework.BuildErrorEventArgs e);
         void LogMessageEvent(Microsoft.Build.Framework.BuildMessageEventArgs e);
         void LogWarningEvent(Microsoft.Build.Framework.BuildWarningEventArgs e);
+    }
+    public partial interface IBuildEngine10 : Microsoft.Build.Framework.IBuildEngine, Microsoft.Build.Framework.IBuildEngine2, Microsoft.Build.Framework.IBuildEngine3, Microsoft.Build.Framework.IBuildEngine4, Microsoft.Build.Framework.IBuildEngine5, Microsoft.Build.Framework.IBuildEngine6, Microsoft.Build.Framework.IBuildEngine7, Microsoft.Build.Framework.IBuildEngine8, Microsoft.Build.Framework.IBuildEngine9
+    {
+        Microsoft.Build.Framework.BuildEngineInterface EngineInterface { get; }
     }
     public partial interface IBuildEngine2 : Microsoft.Build.Framework.IBuildEngine
     {

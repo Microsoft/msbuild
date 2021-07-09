@@ -222,6 +222,12 @@ namespace Microsoft.Build.BackEnd.Logging
         /// </summary>
         private IDictionary<int, ISet<string>> _warningsAsMessagesByProject;
 
+        /// <summary>
+        /// The minimum message importance that must be logged because there is a possibility that a logger consumes it.
+        /// Null means that the optimization is disabled or no relevant logger has been registered.
+        /// </summary>
+        private MessageImportance? _minimumRequiredMessageImportance;
+
         #region LoggingThread Data
 
         /// <summary>
@@ -702,6 +708,19 @@ namespace Microsoft.Build.BackEnd.Logging
             }
         }
 
+        /// <summary>
+        /// Returns the minimum logging importance that must be logged because there is a possibility that
+        /// at least one registered logger consumes it.
+        /// </summary>
+        public MessageImportance MinimumRequiredMessageImportance
+        {
+            get
+            {
+                // If we haven't set the field return the default of "all messages must be logged".
+                return _minimumRequiredMessageImportance ?? MessageImportance.Low;
+            }
+        }
+
         #endregion
 
         #region Members
@@ -1120,7 +1139,7 @@ namespace Microsoft.Build.BackEnd.Logging
         #endregion
 
         /// <summary>
-        /// This method will becalled from multiple threads in asynchronous mode.
+        /// This method will be called from multiple threads in asynchronous mode.
         ///
         /// Determine where to send the buildevent either to the filters or to a specific sink.
         /// When in Asynchronous mode the event should to into the logging queue (as long as we are initialized).
@@ -1553,8 +1572,55 @@ namespace Microsoft.Build.BackEnd.Logging
                 InternalLoggerException.Throw(e, null, "FatalErrorWhileInitializingLogger", true, logger.GetType().Name);
             }
 
+            // Update the minimum guaranteed message importance based on the newly added logger.
+            UpdateMinimumMessageImportance(logger);
+
             // Keep track of the loggers so they can be unregistered later on
             _loggers.Add(logger);
+        }
+
+        /// <summary>
+        /// Updates <see cref="_minimumRequiredMessageImportance"/> based on the given <paramref name="logger"/>.
+        /// </summary>
+        /// <param name="logger">The newly registered logger.</param>
+        /// <remarks>
+        /// This method contains knowledge about several logger classes used by MSBuild. The goal is to optimize common scenarios,
+        /// such as building on the command line with normal or minimum verbosity. If the user registers an external custom logger,
+        /// we will fall back to "minimum importance" == Low because we don't know how the logger processes messages, therefore we
+        /// must feed it everything.
+        /// </remarks>
+        private void UpdateMinimumMessageImportance(ILogger logger)
+        {
+            var innerLogger = (logger is Evaluation.ProjectCollection.ReusableLogger reusableLogger) ? reusableLogger.OriginalLogger : logger;
+
+            MessageImportance? minimumImportance = innerLogger switch
+            {
+                Build.Logging.ConsoleLogger consoleLogger => consoleLogger.GetMinimumMessageImportance(),
+                Build.Logging.ConfigurableForwardingLogger forwardingLogger => forwardingLogger.GetMinimumMessageImportance(),
+
+                // Central forwarding loggers are used in worker nodes if logging verbosity could not be optimized, i.e. in cases
+                // where we must log everything. They can be ignored in inproc nodes.
+                CentralForwardingLogger => (_nodeId > 1 ? MessageImportance.Low : null),
+
+                // The null logger has no effect on minimum verbosity.
+                Execution.BuildManager.NullLogger => null,
+
+                // If the logger is not on our whitelist, there are no importance guarantees. Fall back to "any importance".
+                _ => MessageImportance.Low
+            };
+
+            if (minimumImportance != null)
+            {
+                if (_minimumRequiredMessageImportance == null)
+                {
+                    _minimumRequiredMessageImportance = minimumImportance;
+                }
+                else
+                {
+                    int newMinImportance = Math.Max((int)_minimumRequiredMessageImportance, (int)minimumImportance);
+                    _minimumRequiredMessageImportance = (MessageImportance)newMinImportance;
+                }
+            }
         }
 
         /// <summary>
@@ -1609,8 +1675,7 @@ namespace Microsoft.Build.BackEnd.Logging
         /// </summary>
         private string GetAndVerifyProjectFileFromContext(BuildEventContext context)
         {
-            string projectFile;
-            _projectFileMap.TryGetValue(context.ProjectContextId, out projectFile);
+            _projectFileMap.TryGetValue(context.ProjectContextId, out string projectFile);
 
             // PERF: Not using VerifyThrow to avoid boxing an int in the non-error case.
             if (projectFile == null)

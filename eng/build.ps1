@@ -151,8 +151,20 @@ function Set-OptProfVariables() {
 function Check-EditedFiles() {
   # Log VSTS errors for changed lines
   git --no-pager diff HEAD --unified=0 --no-color --exit-code | ForEach-Object { "##vso[task.logissue type=error] $_" }
-  if($LASTEXITCODE -ne 0) {
+  if ($LASTEXITCODE -ne 0) {
     throw "##vso[task.logissue type=error] After building, there are changed files.  Please build locally and include these changes in your pull request."
+  }
+}
+
+function Check-RequiredVersionBumps() {
+  # Log VSTS errors for missing required version bumps
+  $versionLineChanged = $false
+  git --no-pager diff --unified --no-color --exit-code -w origin/$env:SYSTEM_PULLREQUEST_TARGETBRANCH HEAD src\Framework\BuildEngineInterface.cs `
+    | Select-String -Pattern "int Version =" | ForEach-Object -process { $versionLineChanged = $true }
+  if (($LASTEXITCODE -ne 0) -and (-not $versionLineChanged)) {
+    throw "##vso[task.logissue type=error] Detected changes in Framework\BuildEngineInterface.cs without a version bump.  " +
+          "If you are making API changes, please bump the version.  " +
+          "If the changes in the file are cosmetic, please add/change a comment on the Version prop to silence the error."
   }
 }
 
@@ -164,6 +176,10 @@ try {
   . (Join-Path $PSScriptRoot "configure-toolset.ps1")
 
   $VSSetupDir = Join-Path $ArtifactsDir "VSSetup\$configuration"
+
+  if ($ci -and $build) {
+    Check-RequiredVersionBumps
+  }
 
   Build-Repo
 
