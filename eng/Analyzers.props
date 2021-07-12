@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <CodeAnalysisRuleset>$(MSBuildThisFileDirectory)CodeAnalysis.ruleset</CodeAnalysisRuleset>
+    <!-- Disable analyzers in sourcebuild -->
+    <EnableAnalyzers Condition="'$(DotNetBuildFromSource)' == 'true'">false</EnableAnalyzers>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(EnableAnalyzers)' == 'true'">
+    <PackageReference Include="Microsoft.CodeQuality.Analyzers" VersionOverride="3.3.0" PrivateAssets="all" />
+    <PackageReference Include="StyleCop.Analyzers" VersionOverride="1.2.0-beta.164" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

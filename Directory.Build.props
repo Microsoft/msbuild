@@ -68,4 +68,7 @@
 
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
   </PropertyGroup>
+  
+  <Import Project="$(RepositoryEngineeringDir)Analyzers.props" />
+  
 </Project>
