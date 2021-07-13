@@ -260,6 +260,51 @@ namespace Microsoft.Build.UnitTests.BackEnd
         }
 
         [Fact]
+        public void TestTranslationWithEntireProjectState()
+        {
+            string projectBody = ObjectModelHelpers.CleanupFileContents(@"
+<Project ToolsVersion='msbuilddefaulttoolsversion' xmlns='msbuildnamespace'>
+<PropertyGroup>
+    <One>1</One>
+    <Two>2</Two>
+    <Three>$(ThreeIn)</Three>
+</PropertyGroup>
+<Target Name='Build'>
+    <CallTarget Targets='Foo'/>
+</Target>
+</Project>");
+
+            Dictionary<string, string> globalProperties = new (StringComparer.OrdinalIgnoreCase);
+            globalProperties["ThreeIn"] = "3";
+
+            Project project = new Project(
+                XmlReader.Create(new StringReader(projectBody)),
+                globalProperties,
+                ObjectModelHelpers.MSBuildDefaultToolsVersion,
+                new ProjectCollection());
+            project.FullPath = "foo";
+            ProjectInstance instance = project.CreateProjectInstance();
+
+            instance.TranslateEntireState = true;
+
+            BuildRequestConfiguration configuration = new BuildRequestConfiguration(new BuildRequestData(instance, new string[] { }, null), "2.0");
+            configuration.ConfigurationId = 1;
+
+            ((ITranslatable)configuration).Translate(TranslationHelpers.GetWriteTranslator());
+            INodePacket packet = BuildRequestConfiguration.FactoryForDeserialization(TranslationHelpers.GetReadTranslator());
+
+            BuildRequestConfiguration deserializedConfig = packet as BuildRequestConfiguration;
+
+            deserializedConfig.ShouldNotBeNull();
+            deserializedConfig.ShouldBe(configuration);
+            deserializedConfig.Project.ShouldNotBeNull();
+
+            // Verify that at least some data from 'entire project state' has been deserialized.
+            deserializedConfig.Project.Directory.ShouldNotBeEmpty();
+            deserializedConfig.Project.Directory.ShouldBe(configuration.Project.Directory);
+        }
+
+        [Fact]
         public void TestProperties()
         {
             BuildRequestConfiguration configuration = new BuildRequestConfiguration(new BuildRequestData("path", new Dictionary<string, string>(), "2.0", new string[] { }, null), "2.0");

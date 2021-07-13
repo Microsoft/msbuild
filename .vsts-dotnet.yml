@@ -10,12 +10,28 @@ trigger:
 #   SignType: real
 #   SkipApplyOptimizationData: false
 
+parameters:
+- name: OptProfDropName
+  displayName: Optional OptProfDrop Override
+  type: string
+  default: 'default'
+
 variables:
+  # if OptProfDrop is not set, string '$(OptProfDrop)' will be passed to the build script.
+  - name: OptProfDrop
+    value: ''
   - name: SourceBranch
     value: $(IbcSourceBranchName)
-  - ${{ if startsWith(variables['Build.SourceBranch'], 'refs/heads/exp/') }}:
+  # If we're not on a vs* branch, use main as our optprof collection branch
+  - ${{ if not(startsWith(variables['Build.SourceBranch'], 'refs/heads/vs')) }}:
     - name: SourceBranch
       value: main
+  # if OptProfDropName is set as a parameter, set OptProfDrop to the parameter and unset SourceBranch
+  - ${{ if ne(parameters.OptProfDropName, 'default') }}:
+    - name: OptProfDrop
+      value: ${{parameters.OptProfDropName}}
+    - name: SourceBranch
+      value: ''
   - name: _DotNetArtifactsCategory
     value: .NETCore
   - name: _DotNetValidationArtifactsCategory
@@ -49,9 +65,9 @@ stages:
     - name: TeamName
       value: MSBuild
     - name: VisualStudio.MajorVersion
-      value: 16
+      value: 17
     - name: VisualStudio.ChannelName
-      value: 'int.d16.11'
+      value: 'int.main'
     - name: VisualStudio.DropName
       value: Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)
 
@@ -105,7 +121,7 @@ stages:
                 /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
                 /p:TeamName=MSBuild
                 /p:DotNetPublishUsingPipelines=true
-                /p:VisualStudioIbcDrop=$(OptProfDropName)
+                /p:VisualStudioIbcDrop=$(OptProfDrop)
       displayName: Build
       condition: succeeded()
 
@@ -223,12 +239,19 @@ stages:
       displayName: Execute cleanup tasks
       condition: succeededOrFailed()
 
+  - template: /eng/common/templates/job/source-build.yml
+    parameters:
+      platform:
+        name: 'Managed'
+        container: 'mcr.microsoft.com/dotnet-buildtools/prereqs:centos-7-3e800f1-20190501005343'
+
   - template: /eng/common/templates/job/publish-build-assets.yml
     parameters:
       enablePublishBuildArtifacts: true
       publishUsingPipelines: true
       dependsOn:
         - Windows_NT
+        - Source_Build_Managed
       pool:
         vmImage: vs2017-win2016
 

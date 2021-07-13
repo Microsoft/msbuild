@@ -109,7 +109,7 @@ namespace Microsoft.Build.Utilities
         /// breaking change. Use 'Latest' if possible, but note the
         /// compatibility implications.
         /// </summary>
-        VersionLatest = Version462,
+        VersionLatest = Version48,
 
         /// <summary>
         /// Sentinel value for the latest version that this version of MSBuild is aware of. Similar
@@ -160,7 +160,7 @@ namespace Microsoft.Build.Utilities
         Version160,
 
         /// <summary>
-        /// Visual Studio "Dev17"
+        /// Visual Studio 2022 (Dev17)
         /// </summary>
         Version170,
 
@@ -168,7 +168,7 @@ namespace Microsoft.Build.Utilities
         /// <summary>
         /// The latest version available at the time of release
         /// </summary>
-        VersionLatest = Version150
+        VersionLatest = Version170
     }
 
     /// <summary>

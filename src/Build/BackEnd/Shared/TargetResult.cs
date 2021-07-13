@@ -45,16 +45,29 @@ namespace Microsoft.Build.Execution
         private CacheInfo _cacheInfo;
 
         /// <summary>
+        /// The (possibly null) <see cref="BuildEventContext"/> from the original target build
+        /// </summary>
+        private BuildEventContext _originalBuildEventContext;
+
+        /// <summary>
         /// Initializes the results with specified items and result.
         /// </summary>
         /// <param name="items">The items produced by the target.</param>
         /// <param name="result">The overall result for the target.</param>
-        internal TargetResult(TaskItem[] items, WorkUnitResult result)
+        /// <param name="originalBuildEventContext">The original build event context from when the target was first built, if available.
+        /// Non-null when creating a <see cref="TargetResult"/> after building the target initially (or skipping due to false condition).
+        /// Null when the <see cref="TargetResult"/> is being created in other scenarios:
+        ///  * Target that never ran because a dependency had an error
+        ///  * in <see cref="ITargetBuilderCallback.LegacyCallTarget"/> when Cancellation was requested
+        ///  * in ProjectCache.CacheResult.ConstructBuildResult
+        /// </param>
+        internal TargetResult(TaskItem[] items, WorkUnitResult result, BuildEventContext originalBuildEventContext = null)
         {
             ErrorUtilities.VerifyThrowArgumentNull(items, nameof(items));
             ErrorUtilities.VerifyThrowArgumentNull(result, nameof(result));
             _items = items;
             _result = result;
+            _originalBuildEventContext = originalBuildEventContext;
         }
 
         /// <summary>
@@ -129,6 +142,11 @@ namespace Microsoft.Build.Execution
             [DebuggerStepThrough]
             get => _result;
         }
+
+        /// <summary>
+        /// The (possibly null) <see cref="BuildEventContext"/> from the original target build
+        /// </summary>
+        internal BuildEventContext OriginalBuildEventContext => _originalBuildEventContext;
 
         /// <summary>
         /// Sets or gets a flag indicating whether or not a failure results should cause the build to fail.
@@ -225,22 +243,15 @@ namespace Microsoft.Build.Execution
                     return;
                 }
 
-                ITranslator translator = GetResultsCacheTranslator(configId, targetName, TranslationDirection.WriteToStream);
+                using ITranslator translator = GetResultsCacheTranslator(configId, targetName, TranslationDirection.WriteToStream);
 
                 // If the translator is null, it means these results were cached once before.  Since target results are immutable once they
                 // have been created, there is no point in writing them again.
                 if (translator != null)
                 {
-                    try
-                    {
-                        TranslateItems(translator);
-                        _items = null;
-                        _cacheInfo = new CacheInfo(configId, targetName);
-                    }
-                    finally
-                    {
-                        translator.Writer.BaseStream.Dispose();
-                    }
+                    TranslateItems(translator);
+                    _items = null;
+                    _cacheInfo = new CacheInfo(configId, targetName);
                 }
             }
         }
@@ -253,6 +264,7 @@ namespace Microsoft.Build.Execution
             translator.Translate(ref _result, WorkUnitResult.FactoryForDeserialization);
             translator.Translate(ref _targetFailureDoesntCauseBuildFailure);
             translator.Translate(ref _afterTargetsHaveFailed);
+            translator.TranslateOptionalBuildEventContext(ref _originalBuildEventContext);
             TranslateItems(translator);
         }
 
@@ -265,17 +277,10 @@ namespace Microsoft.Build.Execution
             {
                 if (_items == null)
                 {
-                    ITranslator translator = GetResultsCacheTranslator(_cacheInfo.ConfigId, _cacheInfo.TargetName, TranslationDirection.ReadFromStream);
+                    using ITranslator translator = GetResultsCacheTranslator(_cacheInfo.ConfigId, _cacheInfo.TargetName, TranslationDirection.ReadFromStream);
 
-                    try
-                    {
-                        TranslateItems(translator);
-                        _cacheInfo = new CacheInfo();
-                    }
-                    finally
-                    {
-                        translator.Reader.BaseStream.Dispose();
-                    }
+                    TranslateItems(translator);
+                    _cacheInfo = new CacheInfo();
                 }
             }
         }
@@ -320,7 +325,7 @@ namespace Microsoft.Build.Execution
                 ErrorUtilities.VerifyThrow(buffer != null, "Unexpected null items buffer during translation.");
 
                 using MemoryStream itemsStream = new MemoryStream(buffer, 0, buffer.Length, writable: false, publiclyVisible: true);
-                var itemTranslator = BinaryTranslator.GetReadTranslator(itemsStream, null);
+                using var itemTranslator = BinaryTranslator.GetReadTranslator(itemsStream, null);
                 _items = new TaskItem[itemsCount];
                 for (int i = 0; i < _items.Length; i++)
                 {

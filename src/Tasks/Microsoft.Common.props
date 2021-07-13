@@ -171,7 +171,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     -->
   <PropertyGroup>
     <MSBuildUseVisualStudioDirectoryLayout Condition="'$(MSBuildUseVisualStudioDirectoryLayout)'==''">$([MSBuild]::IsRunningFromVisualStudio())</MSBuildUseVisualStudioDirectoryLayout>
-    <NuGetPropsFile Condition="'$(NuGetPropsFile)'=='' and '$(MSBuildUseVisualStudioDirectoryLayout)'=='true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.props</NuGetPropsFile>
+    <NuGetPropsFile Condition="'$(NuGetPropsFile)'=='' and '$(MSBuildUseVisualStudioDirectoryLayout)'=='true'">$([MSBuild]::GetToolsDirectory32())\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.props</NuGetPropsFile>
     <NuGetPropsFile Condition="'$(NuGetPropsFile)'==''">$(MSBuildToolsPath)\NuGet.props</NuGetPropsFile>
   </PropertyGroup>
 

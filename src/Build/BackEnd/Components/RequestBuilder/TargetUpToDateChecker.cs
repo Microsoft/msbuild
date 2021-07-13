@@ -233,9 +233,17 @@ namespace Microsoft.Build.BackEnd
 
                 if (result == DependencyAnalysisResult.SkipUpToDate)
                 {
-                    _loggingService.LogComment(_buildEventContext, MessageImportance.Normal,
-                        "SkipTargetBecauseOutputsUpToDate",
-                        TargetToAnalyze.Name);
+                    var skippedTargetEventArgs = new TargetSkippedEventArgs(message: null)
+                    {
+                        BuildEventContext = _buildEventContext,
+                        TargetName = TargetToAnalyze.Name,
+                        BuildReason = TargetBuiltReason.None,
+                        SkipReason = TargetSkipReason.OutputsUpToDate,
+                        OriginallySucceeded = true,
+                        Importance = MessageImportance.Normal
+                    };
+
+                    _loggingService.LogBuildEvent(skippedTargetEventArgs);
 
                     // Log the target inputs & outputs
                     if (!_loggingService.OnlyLogCriticalEvents)
@@ -337,7 +345,7 @@ namespace Microsoft.Build.BackEnd
 
         /// <summary>
         /// Extract only the unique inputs and outputs from all the inputs and outputs gathered
-        /// during depedency analysis
+        /// during dependency analysis
         /// </summary>
         private void LogUniqueInputsAndOutputs()
         {

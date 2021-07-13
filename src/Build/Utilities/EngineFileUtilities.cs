@@ -168,7 +168,7 @@ namespace Microsoft.Build.Internal
 
                 if (returnEscaped)
                 {
-                    // We must now go back and make sure all special characters are escaped because we always 
+                    // We must now go back and make sure all special characters are escaped because we always
                     // store data in the engine in escaped form so it doesn't interfere with our parsing.
                     // Note that this means that characters that were not escaped in the original filespec
                     // may now be escaped, but that's not easy to avoid.

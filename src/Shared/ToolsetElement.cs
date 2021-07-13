@@ -19,7 +19,7 @@ namespace Microsoft.Build.Evaluation
         {
             ToolsetConfigurationSection configurationSection = null;
 
-            // This will be null if the application config file does not have the following section 
+            // This will be null if the application config file does not have the following section
             // definition for the msbuildToolsets section as the first child element.
             //   <configSections>
             //     <section name=""msbuildToolsets"" type=""Microsoft.Build.Evaluation.ToolsetConfigurationSection, Microsoft.Build"" />

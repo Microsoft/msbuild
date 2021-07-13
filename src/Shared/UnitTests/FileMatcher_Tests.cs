@@ -74,7 +74,7 @@ namespace Microsoft.Build.UnitTests
             foreach (string fullPath in GetFilesComplexGlobbingMatchingInfo.FilesToCreate.Select(i => Path.Combine(testFolder.Path, i.ToPlatformSlash())))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
-                
+
                 File.WriteAllBytes(fullPath, new byte[1]);
             }
 
@@ -293,7 +293,7 @@ namespace Microsoft.Build.UnitTests
                         ExpectNoMatches = NativeMethodsShared.IsLinux,
                     }
                 };
-                
+
 #if !MONO // https://github.com/mono/mono/issues/8441
                 yield return new object[]
                 {
@@ -1653,7 +1653,7 @@ namespace Microsoft.Build.UnitTests
             "",
             "",
             "",
-            "^(?<FIXEDDIR>)(?<WILDCARDDIR>)(?<FILENAME>)$",
+            "^(?<WILDCARDDIR>)(?<FILENAME>)$",
             false,
             true
         )]
@@ -1723,7 +1723,7 @@ namespace Microsoft.Build.UnitTests
             "",
             @"*fo?ba?\",
             "*fo?ba?",
-            @"^(?<FIXEDDIR>)(?<WILDCARDDIR>[^/\\]*fo.ba.[/\\]+)(?<FILENAME>[^/\\]*fo.ba.)$",
+            @"^(?<WILDCARDDIR>[^/\\]*fo.ba.[/\\]+)(?<FILENAME>[^/\\]*fo.ba.)$",
             true,
             true
         )]
@@ -1733,7 +1733,7 @@ namespace Microsoft.Build.UnitTests
             "",
             "",
             "?oo*.",
-            @"^(?<FIXEDDIR>)(?<WILDCARDDIR>)(?<FILENAME>[^\.].oo[^\.]*)$",
+            @"^(?<WILDCARDDIR>)(?<FILENAME>[^\.].oo[^\.]*)$",
             false,
             true
         )]
@@ -1743,7 +1743,7 @@ namespace Microsoft.Build.UnitTests
             "",
             "",
             "*.*foo*.*",
-            @"^(?<FIXEDDIR>)(?<WILDCARDDIR>)(?<FILENAME>[^/\\]*foo[^/\\]*)$",
+            @"^(?<WILDCARDDIR>)(?<FILENAME>[^/\\]*foo[^/\\]*)$",
             false,
             true
         )]
@@ -1753,7 +1753,7 @@ namespace Microsoft.Build.UnitTests
             @"\foo///bar\\\",
             @"?foo///bar\\\",
             "foo",
-            @"^(?<FIXEDDIR>[/\\]+foo[/\\]+bar[/\\]+)(?<WILDCARDDIR>.foo[/\\]+bar[/\\]+)(?<FILENAME>foo)$",
+            @"^[/\\]+foo[/\\]+bar[/\\]+(?<WILDCARDDIR>.foo[/\\]+bar[/\\]+)(?<FILENAME>foo)$",
             true,
             true
         )]
@@ -1763,7 +1763,7 @@ namespace Microsoft.Build.UnitTests
             @"\./.\foo/.\./bar\./.\",
             @"?foo/.\./bar\./.\",
             "foo",
-            @"^(?<FIXEDDIR>[/\\]+foo[/\\]+bar[/\\]+)(?<WILDCARDDIR>.foo[/\\]+bar[/\\]+)(?<FILENAME>foo)$",
+            @"^[/\\]+foo[/\\]+bar[/\\]+(?<WILDCARDDIR>.foo[/\\]+bar[/\\]+)(?<FILENAME>foo)$",
             true,
             true
         )]
@@ -1773,7 +1773,7 @@ namespace Microsoft.Build.UnitTests
             @"foo\",
             @"**/**\bar/**\**/foo\**/**\",
             "bar",
-            @"^(?<FIXEDDIR>foo[/\\]+)(?<WILDCARDDIR>((.*/)|(.*\\)|())bar((/)|(\\)|(/.*/)|(/.*\\)|(\\.*\\)|(\\.*/))foo((/)|(\\)|(/.*/)|(/.*\\)|(\\.*\\)|(\\.*/)))(?<FILENAME>bar)$",
+            @"^foo[/\\]+(?<WILDCARDDIR>((.*/)|(.*\\)|())bar((/)|(\\)|(/.*/)|(/.*\\)|(\\.*\\)|(\\.*/))foo((/)|(\\)|(/.*/)|(/.*\\)|(\\.*\\)|(\\.*/)))(?<FILENAME>bar)$",
             true,
             true
         )]
@@ -1783,7 +1783,7 @@ namespace Microsoft.Build.UnitTests
             @"foo\\\.///",
             @"**\\\.///**\\\.///bar\\\.///**\\\.///**\\\.///foo\\\.///**\\\.///**\\\.///",
             "bar",
-            @"^(?<FIXEDDIR>foo[/\\]+)(?<WILDCARDDIR>((.*/)|(.*\\)|())bar((/)|(\\)|(/.*/)|(/.*\\)|(\\.*\\)|(\\.*/))foo((/)|(\\)|(/.*/)|(/.*\\)|(\\.*\\)|(\\.*/)))(?<FILENAME>bar)$",
+            @"^foo[/\\]+(?<WILDCARDDIR>((.*/)|(.*\\)|())bar((/)|(\\)|(/.*/)|(/.*\\)|(\\.*\\)|(\\.*/))foo((/)|(\\)|(/.*/)|(/.*\\)|(\\.*\\)|(\\.*/)))(?<FILENAME>bar)$",
             true,
             true
         )]
@@ -1821,7 +1821,7 @@ namespace Microsoft.Build.UnitTests
             @"$()+.[^{\",
             @"?$()+.[^{\",
             "$()+.[^{",
-            @"^(?<FIXEDDIR>\$\(\)\+\.\[\^\{[/\\]+)(?<WILDCARDDIR>.\$\(\)\+\.\[\^\{[/\\]+)(?<FILENAME>\$\(\)\+\.\[\^\{)$",
+            @"^\$\(\)\+\.\[\^\{[/\\]+(?<WILDCARDDIR>.\$\(\)\+\.\[\^\{[/\\]+)(?<FILENAME>\$\(\)\+\.\[\^\{)$",
             true,
             true
         )]
@@ -1831,7 +1831,7 @@ namespace Microsoft.Build.UnitTests
             @"\\\.\foo/",
             "",
             "bar",
-            @"^(?<FIXEDDIR>\\\\foo[/\\]+)(?<WILDCARDDIR>)(?<FILENAME>bar)$",
+            @"^\\\\foo[/\\]+(?<WILDCARDDIR>)(?<FILENAME>bar)$",
             false,
             true
         )]
@@ -1864,7 +1864,7 @@ namespace Microsoft.Build.UnitTests
             @"$()+.[^{|/",
             @"?$()+.[^{|/",
             "$()+.[^{|",
-            @"^(?<FIXEDDIR>\$\(\)\+\.\[\^\{\|[/\\]+)(?<WILDCARDDIR>.\$\(\)\+\.\[\^\{\|[/\\]+)(?<FILENAME>\$\(\)\+\.\[\^\{\|)$",
+            @"^\$\(\)\+\.\[\^\{\|[/\\]+(?<WILDCARDDIR>.\$\(\)\+\.\[\^\{\|[/\\]+)(?<FILENAME>\$\(\)\+\.\[\^\{\|)$",
             true,
             true
         )]
@@ -1874,7 +1874,7 @@ namespace Microsoft.Build.UnitTests
             @"///./foo/",
             "",
             "bar",
-            @"^(?<FIXEDDIR>[/\\]+foo[/\\]+)(?<WILDCARDDIR>)(?<FILENAME>bar)$",
+            @"^[/\\]+foo[/\\]+(?<WILDCARDDIR>)(?<FILENAME>bar)$",
             false,
             true
         )]
@@ -2112,8 +2112,7 @@ namespace Microsoft.Build.UnitTests
                             int nextSlash = normalizedCandidate.IndexOfAny(FileMatcher.directorySeparatorCharacters, path.Length + 1);
                             if (nextSlash != -1)
                             {
-                                
-                                //UNC paths start with a \\ fragment. Match against \\ when path is empty (i.e., inside the current working directory)
+                                // UNC paths start with a \\ fragment. Match against \\ when path is empty (i.e., inside the current working directory)
                                 string match = normalizedCandidate.StartsWith(@"\\") && string.IsNullOrEmpty(path)
                                     ? @"\\"
                                     : normalizedCandidate.Substring(0, nextSlash);
@@ -2129,7 +2128,7 @@ namespace Microsoft.Build.UnitTests
                                     directories.Add(FileMatcher.Normalize(match));
                                 }
                                 else if    // Match patterns like ?emp
-                                    (
+                                (
                                     pattern.Substring(0, 1) == "?"
                                     && pattern.Length == baseMatch.Length
                                 )
@@ -2659,15 +2658,10 @@ namespace Microsoft.Build.UnitTests
                 return FileSystems.Default.FileExists(path);
             }
 
-            public bool DirectoryEntryExists(string path)
+            public bool FileOrDirectoryExists(string path)
             {
-                return FileSystems.Default.DirectoryEntryExists(path);
+                return FileSystems.Default.FileOrDirectoryExists(path);
             }
         }
     }
 }
-
-
-
-
-

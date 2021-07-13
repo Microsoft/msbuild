@@ -540,19 +540,37 @@ namespace Microsoft.Build.BackEnd.Logging
                 }
             }
 
-            ReadProjectConfigurationDescription(e.BuildEventContext, e.Items);
+            var projectKey = (e.BuildEventContext.NodeId, e.BuildEventContext.ProjectContextId);
+
+            // If the value is available at all, it will be either in the items
+            // from ProjectStarted (old behavior), or the items from ProjectEvaluationFinished (new behavior).
+            // First try the old behavior, and fallback to the new behavior.
+            var result = ReadProjectConfigurationDescription(e.Items);
+            if (result != null)
+            {
+                // Found the items directly on ProjectStarted
+                propertyOutputMap[projectKey] = result;
+            }
+            else
+            {
+                // Try to see if we saw the items on the corresponding ProjectEvaluationFinished
+                var evaluationKey = GetEvaluationKey(e.BuildEventContext);
+
+                // if the value was set from ProjectEvaluationFinished, copy it into the entry
+                // for this project
+                if (propertyOutputMap.TryGetValue(evaluationKey, out string value))
+                {
+                    propertyOutputMap[projectKey] = value;
+                }
+            }
         }
 
-        private void ReadProjectConfigurationDescription(BuildEventContext buildEventContext, IEnumerable items)
+        private string ReadProjectConfigurationDescription(IEnumerable items)
         {
-            if (buildEventContext == null || items == null)
+            if (items == null)
             {
-                return;
+                return null;
             }
-
-            // node and project context ids for the propertyOutputMap key.
-            int nodeID = buildEventContext.NodeId;
-            int projectContextId = buildEventContext.ProjectContextId;
 
             ReuseableStringBuilder projectConfigurationDescription = null;
 
@@ -578,13 +596,26 @@ namespace Microsoft.Build.BackEnd.Logging
                 }
             });
 
-            // Add the finished dictionary to propertyOutputMap.
             if (projectConfigurationDescription != null)
             {
-                propertyOutputMap.Add((nodeID, projectContextId), projectConfigurationDescription.ToString());
+                var result = projectConfigurationDescription.ToString();
                 (projectConfigurationDescription as IDisposable)?.Dispose();
+                return result;
             }
+
+            return null;
         }
+
+        /// <summary>
+        /// In case the items are stored on ProjectEvaluationFinishedEventArgs
+        /// (new behavior), we first store the value per evaluation, and then
+        /// in ProjectStarted, find the value from the project's evaluation
+        /// and use that.
+        /// </summary>
+        private (int, int) GetEvaluationKey(BuildEventContext buildEventContext)
+            // note that we use a negative number for evaluations so that we don't conflict
+            // with project context ids.
+            => (buildEventContext.NodeId, -buildEventContext.EvaluationId);
 
         /// <summary>
         /// Handler for project finished events
@@ -751,44 +782,23 @@ namespace Microsoft.Build.BackEnd.Logging
             ShownBuildEventContext(e.BuildEventContext);
         }
 
-        internal override void OutputItems(string itemType, ArrayList itemTypeList)
+        protected override void WriteItemType(string itemType)
         {
-            // Write each item, one per line
-            bool haveWrittenItemType = false;
-            foreach (ITaskItem item in itemTypeList)
-            {
-                if (!haveWrittenItemType)
-                {
-                    setColor(ConsoleColor.DarkGray);
-                    WriteMessageAligned(itemType, false);
-                    haveWrittenItemType = true;
-                }
-                setColor(ConsoleColor.Gray);
-
-                // Indent the text by two tab lengths
-                StringBuilder result = new StringBuilder((2 * tabWidth) + item.ItemSpec.Length);
-                result.Append(' ', 2 * tabWidth).Append(item.ItemSpec);
-                WriteMessageAligned(result.ToString(), false);
-
-                IDictionary metadata = item.CloneCustomMetadata();
-
-                foreach (DictionaryEntry metadatum in metadata)
-                {
-                    string valueOrError;
-                    try
-                    {
-                        valueOrError = item.GetMetadata(metadatum.Key as string);
-                    }
-                    catch (InvalidProjectFileException e)
-                    {
-                        valueOrError = e.Message;
-                    }
-
-                    WriteMessageAligned($"{new string(' ', 4 * tabWidth)}{metadatum.Key} = {valueOrError}", false);
-                }
-            }
-            resetColor();
+            setColor(ConsoleColor.DarkGray);
+            WriteMessageAligned(itemType, prefixAlreadyWritten: false);
+            setColor(ConsoleColor.Gray);
         }
+
+        protected override void WriteItemSpec(string itemSpec)
+        {
+            WriteMessageAligned(new string(' ', 2 * tabWidth) + itemSpec, prefixAlreadyWritten: false);
+        }
+
+        protected override void WriteMetadata(string name, string value)
+        {
+            WriteMessageAligned($"{new string(' ', 4 * tabWidth)}{name} = {value}", prefixAlreadyWritten: false);
+        }
+
         /// <summary>
         /// Handler for target started events
         /// </summary>
@@ -962,16 +972,16 @@ namespace Microsoft.Build.BackEnd.Logging
         /// <summary>
         /// Finds the LogOutProperty string to be printed in messages.
         /// </summary>
-        /// <param name="e"> Build event to extract context information from.</param>
+        /// <param name="e">Build event to extract context information from.</param>
         internal string FindLogOutputProperties(BuildEventArgs e)
         {
             string projectConfigurationDescription = String.Empty;
             if (e.BuildEventContext != null)
             {
-                int nodeId = e.BuildEventContext.NodeId;
-                int projectContextId = e.BuildEventContext.ProjectContextId;
-                propertyOutputMap.TryGetValue((nodeId, projectContextId), out projectConfigurationDescription);
+                var key = (e.BuildEventContext.NodeId, e.BuildEventContext.ProjectContextId);
+                propertyOutputMap.TryGetValue(key, out projectConfigurationDescription);
             }
+
             return projectConfigurationDescription;
         }
 
@@ -1168,7 +1178,12 @@ namespace Microsoft.Build.BackEnd.Logging
                     }
                 }
 
-                ReadProjectConfigurationDescription(projectEvaluationFinished.BuildEventContext, projectEvaluationFinished.Items);
+                var value = ReadProjectConfigurationDescription(projectEvaluationFinished.Items);
+                if (value != null)
+                {
+                    var evaluationKey = GetEvaluationKey(e.BuildEventContext);
+                    propertyOutputMap[evaluationKey] = value;
+                }
             }
         }
 

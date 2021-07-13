@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Resources;
 using System.Xml;
-
+using Microsoft.Build.BackEnd;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Shared.FileSystem;
 using Microsoft.Build.Tasks.ResourceHandling;
@@ -22,18 +22,19 @@ namespace Microsoft.Build.Tasks
     /// 
     /// This is an on-disk serialization format, don't change field names or types or use readonly.
     /// </remarks>
+    /// Serializable should be included in all state files. It permits BinaryFormatter-based calls, including from GenerateResource, which we cannot move off BinaryFormatter.
     [Serializable]
-    internal sealed class ResGenDependencies : StateFileBase
+    internal sealed class ResGenDependencies : StateFileBase, ITranslatable
     {
         /// <summary>
         /// The list of resx files.
         /// </summary>
-        private Dependencies resXFiles = new Dependencies();
+        internal IDictionary<string, ResXFile> resXFiles = new Dictionary<string, ResXFile>();
 
         /// <summary>
         /// A list of portable libraries and the ResW files they can produce.
         /// </summary>
-        private Dependencies portableLibraries = new Dependencies();
+        internal IDictionary<string, PortableLibraryFile> portableLibraries = new Dictionary<string, PortableLibraryFile>();
 
         /// <summary>
         /// A newly-created ResGenDependencies is not dirty.
@@ -47,7 +48,7 @@ namespace Microsoft.Build.Tasks
         ///  If this is NULL then we use the directory in which the .resx is in (that should always
         ///  be the default!)
         /// </summary>
-        private string baseLinkedFileDirectory;
+        internal string baseLinkedFileDirectory;
 
         internal string BaseLinkedFileDirectory
         {
@@ -90,11 +91,38 @@ namespace Microsoft.Build.Tasks
             }
         }
 
+        public ResGenDependencies() { }
+
+        public ResGenDependencies(ITranslator translator)
+        {
+            Translate(translator);
+        }
+
+        public override void Translate(ITranslator translator)
+        {
+            translator.TranslateDictionary(ref resXFiles,
+                (ITranslator translator, ref string s) => translator.Translate(ref s),
+                (ITranslator translator, ref ResXFile resx) => {
+                    ResXFile temp = resx ?? new();
+                    temp.Translate(translator);
+                    resx = temp;
+                },
+                count => new Dictionary<string, ResXFile>(count));
+            translator.TranslateDictionary(ref portableLibraries,
+                (ITranslator translator, ref string s) => translator.Translate(ref s),
+                (ITranslator translator, ref PortableLibraryFile portableLibrary) => {
+                    PortableLibraryFile temp = portableLibrary ?? new();
+                    temp.Translate(translator);
+                    portableLibrary = temp;
+                },
+                count => new Dictionary<string, PortableLibraryFile>(count));
+            translator.Translate(ref baseLinkedFileDirectory);
+        }
+
         internal ResXFile GetResXFileInfo(string resxFile, bool useMSBuildResXReader)
         {
             // First, try to retrieve the resx information from our hashtable.
-            var retVal = (ResXFile)resXFiles.GetDependencyFile(resxFile);
-            if (retVal == null)
+            if (!resXFiles.TryGetValue(resxFile, out ResXFile retVal))
             {
                 // Ok, the file wasn't there.  Add it to our cache and return it to the caller.  
                 retVal = AddResxFile(resxFile, useMSBuildResXReader);
@@ -105,7 +133,7 @@ namespace Microsoft.Build.Tasks
                 // by removing it from the hashtable and readding it.
                 if (retVal.HasFileChanged())
                 {
-                    resXFiles.RemoveDependencyFile(resxFile);
+                    resXFiles.Remove(resxFile);
                     _isDirty = true;
                     retVal = AddResxFile(resxFile, useMSBuildResXReader);
                 }
@@ -120,7 +148,7 @@ namespace Microsoft.Build.Tasks
             // to be cracked for contained files.
 
             var resxFile = new ResXFile(file, BaseLinkedFileDirectory, useMSBuildResXReader);
-            resXFiles.AddDependencyFile(file, resxFile);
+            resXFiles.Add(file, resxFile);
             _isDirty = true;
             return resxFile;
         }
@@ -128,13 +156,13 @@ namespace Microsoft.Build.Tasks
         internal PortableLibraryFile TryGetPortableLibraryInfo(string libraryPath)
         {
             // First, try to retrieve the portable library information from our hashtable.  
-            var retVal = (PortableLibraryFile)portableLibraries.GetDependencyFile(libraryPath);
+            portableLibraries.TryGetValue(libraryPath, out PortableLibraryFile retVal);
 
             // The file is in our cache.  Make sure it's up to date.  If not, discard
             // this entry from the cache and rebuild all the state at a later point.
             if (retVal?.HasFileChanged() == true)
             {
-                portableLibraries.RemoveDependencyFile(libraryPath);
+                portableLibraries.Remove(libraryPath);
                 _isDirty = true;
                 retVal = null;
             }
@@ -144,11 +172,10 @@ namespace Microsoft.Build.Tasks
 
         internal void UpdatePortableLibrary(PortableLibraryFile library)
         {
-            var cached = (PortableLibraryFile)portableLibraries.GetDependencyFile(library.FileName);
-            if (cached == null || !library.Equals(cached))
+            if (!portableLibraries.TryGetValue(library.FileName, out PortableLibraryFile cached) || !library.Equals(cached))
             {
                 // Add a new entry or replace the existing one.
-                portableLibraries.AddDependencyFile(library.FileName, library);
+                portableLibraries.Add(library.FileName, library);
                 _isDirty = true;
             }
         }
@@ -188,11 +215,12 @@ namespace Microsoft.Build.Tasks
         /// 
         /// This is an on-disk serialization format, don't change field names or types or use readonly.
         /// </remarks>
+        /// Serializable should be included in all state files. It permits BinaryFormatter-based calls, including from GenerateResource, which we cannot move off BinaryFormatter.
         [Serializable]
-        internal sealed class ResXFile : DependencyFile
+        internal sealed class ResXFile : DependencyFile, ITranslatable
         {
             // Files contained within this resx file.
-            private string[] linkedFiles;
+            internal string[] linkedFiles;
 
             internal string[] LinkedFiles => linkedFiles;
 
@@ -207,6 +235,18 @@ namespace Microsoft.Build.Tasks
                 {
                     linkedFiles = GetLinkedFiles(filename, baseLinkedFileDirectory, useMSBuildResXReader);
                 }
+            }
+
+            internal ResXFile()
+            {
+            }
+
+            public void Translate(ITranslator translator)
+            {
+                translator.Translate(ref linkedFiles);
+                translator.Translate(ref filename);
+                translator.Translate(ref lastModified);
+                translator.Translate(ref exists);
             }
 
             /// <summary>
@@ -281,12 +321,27 @@ namespace Microsoft.Build.Tasks
         /// 
         /// This is an on-disk serialization format, don't change field names or types or use readonly.
         /// </remarks>
+        /// Serializable should be included in all state files. It permits BinaryFormatter-based calls, including from GenerateResource, which we cannot move off BinaryFormatter.
         [Serializable]
-        internal sealed class PortableLibraryFile : DependencyFile
+        internal sealed class PortableLibraryFile : DependencyFile, ITranslatable
         {
-            private string[] outputFiles;
-            private string neutralResourceLanguage;
-            private string assemblySimpleName;
+            internal string[] outputFiles;
+            internal string neutralResourceLanguage;
+            internal string assemblySimpleName;
+
+            internal PortableLibraryFile()
+            {
+            }
+
+            public void Translate(ITranslator translator)
+            {
+                translator.Translate(ref assemblySimpleName);
+                translator.Translate(ref outputFiles);
+                translator.Translate(ref neutralResourceLanguage);
+                translator.Translate(ref filename);
+                translator.Translate(ref lastModified);
+                translator.Translate(ref exists);
+            }
 
             internal PortableLibraryFile(string filename)
                 : base(filename)

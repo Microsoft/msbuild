@@ -46,6 +46,12 @@ namespace Microsoft.Build.Experimental.ProjectCache
         private readonly ProjectCachePluginBase _projectCachePlugin;
         private ProjectCacheServiceState _serviceState = ProjectCacheServiceState.NotInitialized;
 
+        /// <summary>
+        /// An instanatiable version of MSBuildFileSystemBase not overriding any methods,
+        /// i.e. falling back to FileSystem.Default.
+        /// </summary>
+        private sealed class DefaultMSBuildFileSystem : MSBuildFileSystemBase { }
+      
         // Use NullableBool to make it work with Interlock.CompareExchange (doesn't accept bool?).
         // Assume that if one request is a design time build, all of them are.
         // Volatile because it is read by the BuildManager thread and written by one project cache service thread pool thread.
@@ -114,10 +120,10 @@ namespace Microsoft.Build.Experimental.ProjectCache
                 var projectDescriptor = vsWorkaroundOverrideDescriptor ?? _projectCacheDescriptor;
                 await _projectCachePlugin.BeginBuildAsync(
                     new CacheContext(
-                        projectDescriptor.PluginSettings,
-                        new IFileSystemAdapter(FileSystems.Default),
-                        projectDescriptor.ProjectGraph,
-                        projectDescriptor.EntryPoints),
+                        pluginDescriptor.PluginSettings,
+                        new DefaultMSBuildFileSystem(),
+                        pluginDescriptor.ProjectGraph,
+                        pluginDescriptor.EntryPoints),
                     // TODO: Detect verbosity from logging service.
                     logger,
                     _cancellationToken);

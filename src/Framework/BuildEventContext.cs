@@ -306,5 +306,9 @@ namespace Microsoft.Build.Framework
         }
         #endregion
 
+        public override string ToString()
+        {
+            return $"Node={NodeId} Submission={SubmissionId} ProjectContext={ProjectContextId} ProjectInstance={ProjectInstanceId} Eval={EvaluationId} Target={TargetId} Task={TaskId}";
+        }
     }
 }

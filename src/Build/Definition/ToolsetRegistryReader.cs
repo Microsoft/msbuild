@@ -323,7 +323,7 @@ namespace Microsoft.Build.Evaluation
                 object result = wrapper.GetValue(valueName);
 
                 // RegistryKey.GetValue returns null if the value is not present
-                // and String.Empty if the value is present and no data is defined. 
+                // and String.Empty if the value is present and no data is defined.
                 // We preserve this distinction, because a string property in the registry with
                 // no value really has an empty string for a value (which is a valid property value)
                 // rather than null for a value (which is an invalid property value)

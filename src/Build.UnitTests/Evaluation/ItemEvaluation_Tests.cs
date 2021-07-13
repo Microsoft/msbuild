@@ -110,7 +110,7 @@ namespace Microsoft.Build.UnitTests.Evaluation
                 {"m1", "m1_contents"},
                 {"m2", "m2_contents"}
             };
-            
+
             var itemsForI = items.Where(i => i.ItemType == "i").ToList();
             ObjectModelHelpers.AssertItems(new[] { "a", "b", "c" }, itemsForI, expectedMetadata);
 
@@ -508,7 +508,7 @@ namespace Microsoft.Build.UnitTests.Evaluation
                 new Dictionary<string, string>
                 {
                     {"m", "i2"}
-                }, 
+                },
                 i1BaseMetadata,
                 i1BaseMetadata
             };
@@ -528,7 +528,7 @@ namespace Microsoft.Build.UnitTests.Evaluation
         public void LongIncludeChain()
         {
             const int INCLUDE_COUNT = 10000;
-            
+
             //  This was about the minimum count needed to repro a StackOverflowException
             //const int INCLUDE_COUNT = 4000;
 
@@ -605,7 +605,7 @@ namespace Microsoft.Build.UnitTests.Evaluation
                 }
 
                 Assert.Equal(expectedItems, project.GetConcatenatedItemsOfType("i2"));
-                
+
                 var fullPathItems = project.GetConcatenatedItemsOfType("FullPath");
                 Assert.Contains("a.cs", fullPathItems);
                 Assert.Contains("b.cs", fullPathItems);

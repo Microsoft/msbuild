@@ -2003,12 +2003,12 @@ namespace Microsoft.Build.Tasks
         /// </summary>
         internal void ReadStateFile(FileExists fileExists)
         {
-            _cache = SystemState.DeserializeCacheByTranslator(_stateFile, Log);
+            _cache = SystemState.DeserializeCache(_stateFile, Log, typeof(SystemState)) as SystemState;
 
             // Construct the cache only if we can't find any caches.
             if (_cache == null && AssemblyInformationCachePaths != null && AssemblyInformationCachePaths.Length > 0)
             {
-                _cache = SystemState.DeserializePrecomputedCachesByTranslator(AssemblyInformationCachePaths, Log, fileExists);
+                _cache = SystemState.DeserializePrecomputedCaches(AssemblyInformationCachePaths, Log, fileExists);
             }
 
             if (_cache == null)
@@ -2024,11 +2024,11 @@ namespace Microsoft.Build.Tasks
         {
             if (!String.IsNullOrEmpty(AssemblyInformationCacheOutputPath))
             {
-                _cache.SerializePrecomputedCacheByTranslator(AssemblyInformationCacheOutputPath, Log);
+                _cache.SerializePrecomputedCache(AssemblyInformationCacheOutputPath, Log);
             }
             else if (!String.IsNullOrEmpty(_stateFile) && _cache.IsDirty)
             {
-                _cache.SerializeCacheByTranslator(_stateFile, Log);
+                _cache.SerializeCache(_stateFile, Log);
             }
         }
         #endregion
@@ -2265,7 +2265,7 @@ namespace Microsoft.Build.Tasks
                     // Cache delegates.
                     getAssemblyName = _cache.CacheDelegate(getAssemblyName);
                     getAssemblyMetadata = _cache.CacheDelegate(getAssemblyMetadata);
-                    fileExists = _cache.CacheDelegate(fileExists);
+                    fileExists = _cache.CacheDelegate();
                     directoryExists = _cache.CacheDelegate(directoryExists);
                     getDirectories = _cache.CacheDelegate(getDirectories);
                     getRuntimeVersion = _cache.CacheDelegate(getRuntimeVersion);

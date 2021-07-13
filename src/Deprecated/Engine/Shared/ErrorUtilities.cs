@@ -32,7 +32,7 @@ namespace Microsoft.Build.BuildEngine.Shared
         /// Puts up an assertion dialog in debug builds, and throws an exception in
         /// both debug and release builds. Since this is not a no-op in release builds,
         /// it should not be called repeatedly in performance-critical scenarios.
-        /// 
+        ///
         /// PERF WARNING: calling a method that takes a variable number of arguments
         /// is expensive, because memory is allocated for the array of arguments -- do
         /// not call this method repeatedly in performance-critical scenarios
@@ -48,7 +48,7 @@ namespace Microsoft.Build.BuildEngine.Shared
             params object[] args
         )
         {
-            // We ignore showAssert:  we don't want to show the assert dialog no matter what. 
+            // We ignore showAssert:  we don't want to show the assert dialog no matter what.
             throw new InternalErrorException(ResourceUtilities.FormatString(unformattedMessage, args));
         }
 
@@ -243,7 +243,7 @@ namespace Microsoft.Build.BuildEngine.Shared
 
         /// <summary>
         /// Throws an InvalidOperationException.
-        /// 
+        ///
         /// PERF WARNING: calling a method that takes a variable number of arguments
         /// is expensive, because memory is allocated for the array of arguments -- do
         /// not call this method repeatedly in performance-critical scenarios
@@ -597,7 +597,7 @@ namespace Microsoft.Build.BuildEngine.Shared
         {
             if (parameter == null)
             {
-                // Most ArgumentNullException overloads append its own rather clunky multi-line message. 
+                // Most ArgumentNullException overloads append its own rather clunky multi-line message.
                 // So use the one overload that doesn't.
                 throw new ArgumentNullException(
                     ResourceUtilities.FormatResourceString(resourceName, parameterName),

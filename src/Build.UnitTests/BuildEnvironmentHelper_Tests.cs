@@ -307,9 +307,9 @@ namespace Microsoft.Build.Engine.UnitTests
         [Theory]
         [SkipOnTargetFramework(TargetFrameworkMonikers.Netcoreapp, "No Visual Studio install for netcore")]
         [PlatformSpecific(TestPlatforms.Windows)]
-        [InlineData("16.0", true)]
-        [InlineData("16.3", true)]
-        [InlineData("15.0", false)]
+        [InlineData("17.0", true)]
+        [InlineData("17.3", true)]
+        [InlineData("16.0", false)]
         public void BuildEnvironmentDetectsVisualStudioFromSetupInstance(string visualStudioVersion, bool shouldBeValid)
         {
             using (var env = new EmptyVSEnviroment())

@@ -564,8 +564,7 @@ namespace Microsoft.Build.Execution
             _hostServices = that._hostServices;
             _isImmutable = isImmutable;
             _evaluationId = that.EvaluationId;
-
-            TranslateEntireState = that.TranslateEntireState;
+            _translateEntireState = that._translateEntireState;
 
             if (filter == null)
             {
@@ -849,23 +848,8 @@ namespace Microsoft.Build.Execution
         /// </summary>
         public bool TranslateEntireState
         {
-            get
-            {
-                return Traits.Instance.EscapeHatches.ProjectInstanceTranslation switch
-                {
-                    EscapeHatches.ProjectInstanceTranslationMode.Full => true,
-                    EscapeHatches.ProjectInstanceTranslationMode.Partial => false,
-                    _ => _translateEntireState,
-                };
-            }
-
-            set
-            {
-                if (Traits.Instance.EscapeHatches.ProjectInstanceTranslation == null)
-                {
-                    _translateEntireState = value;
-                }
-            }
+            get => _translateEntireState;
+            set => _translateEntireState = value;
         }
 
         /// <summary>
@@ -899,8 +883,7 @@ namespace Microsoft.Build.Execution
         public string FullPath
         {
             [DebuggerStepThrough]
-            get
-            { return _projectFileLocation.File; }
+            get => _projectFileLocation?.File ?? string.Empty;
         }
 
         /// <summary>
@@ -2019,15 +2002,42 @@ namespace Microsoft.Build.Execution
         /// </summary>
         void ITranslatable.Translate(ITranslator translator)
         {
+            if (translator.Mode == TranslationDirection.WriteToStream)
+            {
+                // When serializing into stream apply Traits.Instance.EscapeHatches.ProjectInstanceTranslation if defined.
+                MaybeForceTranslateEntireStateMode();
+            }
+
             translator.Translate(ref _translateEntireState);
 
-            if (TranslateEntireState)
+            if (_translateEntireState)
             {
                 TranslateAllState(translator);
             }
             else
             {
                 TranslateMinimalState(translator);
+            }
+        }
+
+        private void MaybeForceTranslateEntireStateMode()
+        {
+            var forcedProjectInstanceTranslationMode = Traits.Instance.EscapeHatches.ProjectInstanceTranslation;
+            if (forcedProjectInstanceTranslationMode != null)
+            {
+                switch (forcedProjectInstanceTranslationMode)
+                {
+                    case EscapeHatches.ProjectInstanceTranslationMode.Full:
+                        _translateEntireState = true;
+                        break;
+                    case EscapeHatches.ProjectInstanceTranslationMode.Partial:
+                        _translateEntireState = false;
+                        break;
+                    default:
+                        // if EscapeHatches.ProjectInstanceTranslation has an unexpected value, do not force TranslateEntireStateMode.
+                        // Just leave it as is.
+                        break;
+                }
             }
         }
 

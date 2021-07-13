@@ -154,7 +154,7 @@
     <!-- Copy our binaries to the x64 location. -->
      <Copy SourceFiles="@(FreshlyBuiltBinariesx64)"
           DestinationFiles="@(FreshlyBuiltBinariesx64 -> '$(BootstrapDestination)$(TargetMSBuildToolsVersion)\Bin\amd64\%(RecursiveDir)%(Filename)%(Extension)')" />
-    
+
     <!-- Copy our freshly-built props and targets, overwriting anything we copied from the machine -->
     <Copy SourceFiles="@(FreshlyBuiltRootProjects)"
           DestinationFiles="@(FreshlyBuiltRootProjects -> '$(BootstrapDestination)$(TargetMSBuildToolsVersion)\%(Filename)%(Extension)')" />
@@ -189,6 +189,14 @@
 
     <Copy SourceFiles="@(InstalledSdks)"
           DestinationFiles="@(InstalledSdks -> '$(BootstrapDestination)Sdks\%(RecursiveDir)%(Filename)%(Extension)')" />
+
+    <!-- The .NET SDK has a dependency on DependencyModel, but relies on having it in the final
+         MSBuild.deps.json, which differs from ours because it's generated in the SDK repo.
+
+         Copy it from "next to MSBuild" in the pre-bootstrap SDK to our little weirdo bootstrap
+         layout next to the SDK tasks, so it can get loaded by the SDK tasks that need it. -->
+    <Copy SourceFiles="$(DOTNET_INSTALL_DIR)\sdk\$(DotNetCliVersion)\Microsoft.Extensions.DependencyModel.dll"
+          DestinationFolder="$(BootstrapDestination)Sdks\Microsoft.NET.Sdk\tools\net6.0" />
 
     <Copy SourceFiles="@(InstalledExtensions)"
           DestinationFolder="$(BootstrapDestination)Current\%(RecursiveDir)" />

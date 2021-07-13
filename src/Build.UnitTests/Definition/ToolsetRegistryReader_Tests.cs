@@ -36,7 +36,7 @@ namespace Microsoft.Build.UnitTests.Definition
         private const string testRegistryPath = @"msbuildUnitTests";
 
         /// <summary>
-        /// Store the value of the "VisualStudioVersion" environment variable here so that 
+        /// Store the value of the "VisualStudioVersion" environment variable here so that
         /// we can unset it for the duration of the test.
         /// </summary>
         private string _oldVisualStudioVersion;
@@ -341,8 +341,8 @@ namespace Microsoft.Build.UnitTests.Definition
         }
 
         /// <summary>
-        /// Verifies that if a value is defined in both the base toolset and the 
-        /// selected subtoolset, the subtoolset value overrides -- even if that 
+        /// Verifies that if a value is defined in both the base toolset and the
+        /// selected subtoolset, the subtoolset value overrides -- even if that
         /// value is empty.
         /// </summary>
         [Fact]
@@ -381,8 +381,8 @@ namespace Microsoft.Build.UnitTests.Definition
         }
 
         /// <summary>
-        /// Verifies that if a value is defined in both the base toolset and the 
-        /// selected subtoolset, the subtoolset value overrides -- even if that 
+        /// Verifies that if a value is defined in both the base toolset and the
+        /// selected subtoolset, the subtoolset value overrides -- even if that
         /// value is empty.
         /// </summary>
         [Fact]

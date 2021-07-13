@@ -70,6 +70,7 @@ namespace Microsoft.Build.Framework
         public override int GetHashCode() { throw null; }
         public static bool operator ==(Microsoft.Build.Framework.BuildEventContext left, Microsoft.Build.Framework.BuildEventContext right) { throw null; }
         public static bool operator !=(Microsoft.Build.Framework.BuildEventContext left, Microsoft.Build.Framework.BuildEventContext right) { throw null; }
+        public override string ToString() { throw null; }
     }
     public partial class BuildFinishedEventArgs : Microsoft.Build.Framework.BuildStatusEventArgs
     {
@@ -580,10 +581,20 @@ namespace Microsoft.Build.Framework
         public string Condition { get { throw null; } set { } }
         public string EvaluatedCondition { get { throw null; } set { } }
         public override string Message { get { throw null; } }
+        public Microsoft.Build.Framework.BuildEventContext OriginalBuildEventContext { get { throw null; } set { } }
         public bool OriginallySucceeded { get { throw null; } set { } }
         public string ParentTarget { get { throw null; } set { } }
+        public Microsoft.Build.Framework.TargetSkipReason SkipReason { get { throw null; } set { } }
         public string TargetFile { get { throw null; } set { } }
         public string TargetName { get { throw null; } set { } }
+    }
+    public enum TargetSkipReason
+    {
+        None = 0,
+        PreviouslyBuiltSuccessfully = 1,
+        PreviouslyBuiltUnsuccessfully = 2,
+        OutputsUpToDate = 3,
+        ConditionWasFalse = 4,
     }
     public partial class TargetStartedEventArgs : Microsoft.Build.Framework.BuildStatusEventArgs
     {
@@ -652,6 +663,8 @@ namespace Microsoft.Build.Framework
         protected TaskStartedEventArgs() { }
         public TaskStartedEventArgs(string message, string helpKeyword, string projectFile, string taskFile, string taskName) { }
         public TaskStartedEventArgs(string message, string helpKeyword, string projectFile, string taskFile, string taskName, System.DateTime eventTimestamp) { }
+        public int ColumnNumber { get { throw null; } }
+        public int LineNumber { get { throw null; } }
         public override string Message { get { throw null; } }
         public string ProjectFile { get { throw null; } }
         public string TaskFile { get { throw null; } }

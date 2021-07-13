@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MSBuild\MSBuild.csproj" />
-    
+
     <!-- Direct project references needed here to avoid NuGet version conflict errors -->
     <ProjectReference Include="..\Framework\Microsoft.Build.Framework.csproj" />
     <ProjectReference Include="..\Tasks\Microsoft.Build.Tasks.csproj" />
@@ -39,16 +39,11 @@
     <Content Include="$(RepoRoot).dotnet\sdk\$(DotNetCliVersion)\RuntimeIdentifierGraph.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(MonoBuild)' != 'true'">
-    <!-- Include DependencyModel libraries. -->
-    <PackageReference Include="Microsoft.Extensions.DependencyModel" />
-  </ItemGroup>
-
   <!-- Use deps file from this project with additional dependencies listed instead of the one generated in the MSBuild project -->
   <Target Name="UpdateMSBuildDepsFile" AfterTargets="Build" Condition="'$(MonoBuild)' != 'true' and ($([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp2.1')) or '$(TargetFramework)' == 'netstandard2.0')">
     <Copy SourceFiles="$(OutputPath)$(AssemblyName).deps.json" DestinationFiles="$(OutputPath)MSBuild.deps.json" />
   </Target>
-  <Target Name="UpdatePublishedMSBuildDepsFile" AfterTargets="Publish" Condition="'$(TargetFramework)' == 'net5.0'">
+  <Target Name="UpdatePublishedMSBuildDepsFile" AfterTargets="Publish" Condition="'$(TargetFramework)' == 'net6.0'">
     <Copy SourceFiles="$(PublishDir)$(AssemblyName).deps.json" DestinationFiles="$(PublishDir)MSBuild.deps.json" />
   </Target>
 

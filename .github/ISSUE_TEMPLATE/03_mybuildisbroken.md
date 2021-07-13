@@ -2,7 +2,7 @@
 name: 😵 My Build is Broken
 about: Use this template for helping figure out what's wrong with your build.
 title: ''
-labels: untriaged
+labels: needs-triage
 ---
 
 <!-- NOTE: The MSBuild team receives a lot of issues and we need to prioritize them accordingly. Please understand that we may not get to your issue for some time. -->

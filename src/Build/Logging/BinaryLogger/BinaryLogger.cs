@@ -48,7 +48,10 @@ namespace Microsoft.Build.Logging
         // version 13:
         //   - don't log Message where it can be recovered
         //   - log arguments for LazyFormattedBuildEventArgs
-        internal const int FileFormatVersion = 13;
+        //   - TargetSkippedEventArgs: added OriginallySucceeded, Condition, EvaluatedCondition
+        // version 14:
+        //   - TargetSkippedEventArgs: added SkipReason, OriginalBuildEventContext
+        internal const int FileFormatVersion = 14;
 
         private Stream stream;
         private BinaryWriter binaryWriter;

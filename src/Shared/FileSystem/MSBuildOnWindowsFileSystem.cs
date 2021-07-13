@@ -74,9 +74,9 @@ namespace Microsoft.Build.Shared.FileSystem
             return WindowsFileSystem.Singleton().FileExists(path);
         }
 
-        public bool DirectoryEntryExists(string path)
+        public bool FileOrDirectoryExists(string path)
         {
-            return WindowsFileSystem.Singleton().DirectoryEntryExists(path);
+            return WindowsFileSystem.Singleton().FileOrDirectoryExists(path);
         }
     }
 }

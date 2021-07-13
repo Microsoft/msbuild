@@ -132,12 +132,10 @@ namespace Microsoft.Build.Eventing
         }
 
         /// <param name="projectFile">Relevant information about where in the run of the progam it is.</param>
-        /// <param name="numberOfProperties">Number of Properties getting evaluated.</param>
-        /// <param name="numberOfImports">Number of Imports getting evaluated.</param>
         [Event(15, Keywords = Keywords.All)]
-        public void EvaluatePass1Stop(string projectFile, int numberOfProperties, int numberOfImports)
+        public void EvaluatePass1Stop(string projectFile)
         {
-            WriteEvent(15, projectFile, numberOfProperties, numberOfImports);
+            WriteEvent(15, projectFile);
         }
 
         /// <param name="projectFile">Relevant information about where in the run of the progam it is.</param>
@@ -148,11 +146,10 @@ namespace Microsoft.Build.Eventing
         }
 
         /// <param name="projectFile">Relevant information about where in the run of the progam it is.</param>
-        /// <param name="numberOfItemDefinitionGroupElements">Number of ItemDefinitionGroupElements getting evaluated.</param>
         [Event(17, Keywords = Keywords.All)]
-        public void EvaluatePass2Stop(string projectFile, int numberOfItemDefinitionGroupElements)
+        public void EvaluatePass2Stop(string projectFile)
         {
-            WriteEvent(17, projectFile, numberOfItemDefinitionGroupElements);
+            WriteEvent(17, projectFile);
         }
 
         /// <param name="projectFile">Relevant information about where in the run of the progam it is.</param>
@@ -163,11 +160,10 @@ namespace Microsoft.Build.Eventing
         }
 
         /// <param name="projectFile">Relevant information about where in the run of the progam it is.</param>
-        /// <param name="numberOfItemGroupElements">Number of project items evaluated.</param>
         [Event(19, Keywords = Keywords.All)]
-        public void EvaluatePass3Stop(string projectFile, int numberOfItemGroupElements)
+        public void EvaluatePass3Stop(string projectFile)
         {
-            WriteEvent(19, projectFile, numberOfItemGroupElements);
+            WriteEvent(19, projectFile);
         }
 
         /// <param name="projectFile">Relevant information about where in the run of the progam it is.</param>
@@ -178,11 +174,10 @@ namespace Microsoft.Build.Eventing
         }
 
         /// <param name="projectFile">Relevant information about where in the run of the progam it is.</param>
-        /// <param name="numberOfUsingTaskElements">Number of using tasks elements evaluated.</param>
         [Event(21, Keywords = Keywords.All)]
-        public void EvaluatePass4Stop(string projectFile, int numberOfUsingTaskElements)
+        public void EvaluatePass4Stop(string projectFile)
         {
-            WriteEvent(21, projectFile, numberOfUsingTaskElements);
+            WriteEvent(21, projectFile);
         }
 
         /// <param name="projectFile">Relevant information about where in the run of the progam it is.</param>
@@ -193,11 +188,10 @@ namespace Microsoft.Build.Eventing
         }
 
         /// <param name="projectFile">Relevant information about where in the run of the progam it is.</param>
-        /// <param name="targetElementsCount">Number of targets read.</param>
         [Event(23, Keywords = Keywords.All)]
-        public void EvaluatePass5Stop(string projectFile, int targetElementsCount)
+        public void EvaluatePass5Stop(string projectFile)
         {
-            WriteEvent(23, projectFile, targetElementsCount);
+            WriteEvent(23, projectFile);
         }
 
         /// <param name="projectFile">Relevant information about where in the run of the progam it is.</param>

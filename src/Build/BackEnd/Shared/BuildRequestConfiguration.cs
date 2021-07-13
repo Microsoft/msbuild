@@ -131,8 +131,6 @@ namespace Microsoft.Build.BackEnd
         /// </summary>
         private string _savedCurrentDirectory;
 
-        private bool _translateEntireProjectInstanceState;
-
         #endregion
 
         /// <summary>
@@ -178,7 +176,6 @@ namespace Microsoft.Build.BackEnd
                 _project = data.ProjectInstance;
                 _projectInitialTargets = data.ProjectInstance.InitialTargets;
                 _projectDefaultTargets = data.ProjectInstance.DefaultTargets;
-                _translateEntireProjectInstanceState = data.ProjectInstance.TranslateEntireState;
 
                 if (data.PropertiesToTransfer != null)
                 {
@@ -216,7 +213,6 @@ namespace Microsoft.Build.BackEnd
             _project = instance;
             _projectInitialTargets = instance.InitialTargets;
             _projectDefaultTargets = instance.DefaultTargets;
-            _translateEntireProjectInstanceState = instance.TranslateEntireState;
             IsCacheable = false;
         }
 
@@ -230,7 +226,6 @@ namespace Microsoft.Build.BackEnd
             ErrorUtilities.VerifyThrow(other._transferredState == null, "Unexpected transferred state still set on other configuration.");
 
             _project = other._project;
-            _translateEntireProjectInstanceState = other._translateEntireProjectInstanceState;
             _transferredProperties = other._transferredProperties;
             _projectDefaultTargets = other._projectDefaultTargets;
             _projectInitialTargets = other._projectInitialTargets;
@@ -410,7 +405,6 @@ namespace Microsoft.Build.BackEnd
 
             ProjectDefaultTargets = _project.DefaultTargets;
             ProjectInitialTargets = _project.InitialTargets;
-            _translateEntireProjectInstanceState = _project.TranslateEntireState;
 
             if (IsCached)
             {
@@ -498,7 +492,7 @@ namespace Microsoft.Build.BackEnd
             {
                 Project = loadProjectFromFile.Invoke();
             }
-            else if (_translateEntireProjectInstanceState)
+            else if (_project.TranslateEntireState)
             {
                 // projectInstance was serialized over. Finish initialization with node specific state
 
@@ -677,19 +671,12 @@ namespace Microsoft.Build.BackEnd
                 {
                     if (IsCacheable)
                     {
-                        ITranslator translator = GetConfigurationTranslator(TranslationDirection.WriteToStream);
+                        using ITranslator translator = GetConfigurationTranslator(TranslationDirection.WriteToStream);
 
-                        try
-                        {
-                            _project.Cache(translator);
-                            _baseLookup = null;
+                        _project.Cache(translator);
+                        _baseLookup = null;
 
-                            IsCached = true;
-                        }
-                        finally
-                        {
-                            translator.Writer.BaseStream.Dispose();
-                        }
+                        IsCached = true;
                     }
                 }
             }
@@ -712,17 +699,11 @@ namespace Microsoft.Build.BackEnd
                     return;
                 }
 
-                ITranslator translator = GetConfigurationTranslator(TranslationDirection.ReadFromStream);
-                try
-                {
-                    _project.RetrieveFromCache(translator);
+                using ITranslator translator = GetConfigurationTranslator(TranslationDirection.ReadFromStream);
 
-                    IsCached = false;
-                }
-                finally
-                {
-                    translator.Reader.BaseStream.Dispose();
-                }
+                _project.RetrieveFromCache(translator);
+
+                IsCached = false;
             }
         }
 
@@ -876,17 +857,14 @@ namespace Microsoft.Build.BackEnd
             translator.Translate(ref _toolsVersion);
             translator.Translate(ref _explicitToolsVersionSpecified);
             translator.TranslateDictionary(ref _globalProperties, ProjectPropertyInstance.FactoryForDeserialization);
-            translator.Translate(ref _translateEntireProjectInstanceState);
             translator.Translate(ref _transferredState, ProjectInstance.FactoryForDeserialization);
             translator.Translate(ref _transferredProperties, ProjectPropertyInstance.FactoryForDeserialization);
             translator.Translate(ref _resultsNodeId);
             translator.Translate(ref _savedCurrentDirectory);
             translator.TranslateDictionary(ref _savedEnvironmentVariables, StringComparer.OrdinalIgnoreCase);
 
-            // if the entire state is translated, then the transferred state, if exists, represents the full evaluation data
-            if (_translateEntireProjectInstanceState &&
-                translator.Mode == TranslationDirection.ReadFromStream &&
-                _transferredState != null)
+            // if the  entire state is translated, then the transferred state represents the full evaluation data
+            if (translator.Mode == TranslationDirection.ReadFromStream && _transferredState?.TranslateEntireState == true)
             {
                 SetProjectBasedState(_transferredState);
             }

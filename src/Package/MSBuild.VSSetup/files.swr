@@ -21,7 +21,7 @@ vs.relatedProcessFiles
 
 folder InstallDir:\MSBuild\Current
   file source=$(X86BinPath)Microsoft.Common.props
-  file source=$(X86BinPath)Microsoft.VisualStudioVersion.v16.Common.props
+  file source=$(X86BinPath)Microsoft.VisualStudioVersion.v17.Common.props
   file source=$(ThirdPartyNotice)
 
 folder InstallDir:\MSBuild\Current\Bin

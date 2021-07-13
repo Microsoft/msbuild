@@ -354,7 +354,10 @@ namespace Microsoft.Build.BackEnd
 
             if (!condition)
             {
-                _targetResult = new TargetResult(Array.Empty<TaskItem>(), new WorkUnitResult(WorkUnitResultCode.Skipped, WorkUnitActionCode.Continue, null));
+                _targetResult = new TargetResult(
+                    Array.Empty<TaskItem>(),
+                    new WorkUnitResult(WorkUnitResultCode.Skipped, WorkUnitActionCode.Continue, null),
+                    projectLoggingContext.BuildEventContext);
                 _state = TargetEntryState.Completed;
 
                 if (!projectLoggingContext.LoggingService.OnlyLogCriticalEvents)
@@ -375,6 +378,7 @@ namespace Microsoft.Build.BackEnd
                         TargetFile = _target.Location.File,
                         ParentTarget = ParentEntry?.Target?.Name,
                         BuildReason = BuildReason,
+                        SkipReason = TargetSkipReason.ConditionWasFalse,
                         Condition = _target.Condition,
                         EvaluatedCondition = expanded
                     };
@@ -640,14 +644,11 @@ namespace Microsoft.Build.BackEnd
                 }
                 finally
                 {
-                       
-                    
-                        // log the last target finished since we now have the target outputs. 
-                        targetLoggingContext?.LogTargetBatchFinished(projectFullPath, targetSuccess, targetOutputItems?.Count > 0 ? targetOutputItems : null);
-                    
+                    // log the last target finished since we now have the target outputs. 
+                    targetLoggingContext?.LogTargetBatchFinished(projectFullPath, targetSuccess, targetOutputItems?.Count > 0 ? targetOutputItems : null);
                 }
 
-                _targetResult = new TargetResult(targetOutputItems.ToArray(), aggregateResult);
+                _targetResult = new TargetResult(targetOutputItems.ToArray(), aggregateResult, targetLoggingContext?.BuildEventContext);
 
                 if (aggregateResult.ResultCode == WorkUnitResultCode.Failed && aggregateResult.ActionCode == WorkUnitActionCode.Stop)
                 {

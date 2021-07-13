@@ -14,7 +14,7 @@ using Microsoft.Build.Execution;
 using Microsoft.Build.Experimental.ProjectCache;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
-
+using Microsoft.Build.Utilities;
 using BuildAbortedException = Microsoft.Build.Exceptions.BuildAbortedException;
 using ILoggingService = Microsoft.Build.BackEnd.Logging.ILoggingService;
 using NodeLoggingContext = Microsoft.Build.BackEnd.Logging.NodeLoggingContext;
@@ -141,7 +141,7 @@ namespace Microsoft.Build.BackEnd
         /// <summary>
         /// Flag used for debugging by forcing all scheduling to go out-of-proc.
         /// </summary>
-        private bool _forceAffinityOutOfProc;
+        internal bool ForceAffinityOutOfProc { get; private set; }
 
         /// <summary>
         /// The path into which debug files will be written.
@@ -177,7 +177,6 @@ namespace Microsoft.Build.BackEnd
         public Scheduler()
         {
             _debugDumpState = Environment.GetEnvironmentVariable("MSBUILDDEBUGSCHEDULER") == "1";
-            _forceAffinityOutOfProc = Environment.GetEnvironmentVariable("MSBUILDNOINPROCNODE") == "1";
             _debugDumpPath = Environment.GetEnvironmentVariable("MSBUILDDEBUGPATH");
             _schedulingUnlimitedVariable = Environment.GetEnvironmentVariable("MSBUILDSCHEDULINGUNLIMITED");
             _nodeLimitOffset = 0;
@@ -616,6 +615,10 @@ namespace Microsoft.Build.BackEnd
             _resultsCache = (IResultsCache)_componentHost.GetComponent(BuildComponentType.ResultsCache);
             _configCache = (IConfigCache)_componentHost.GetComponent(BuildComponentType.ConfigCache);
             _inprocNodeContext =  new NodeLoggingContext(_componentHost.LoggingService, InProcNodeId, true);
+            var inprocNodeDisabledViaEnvironmentVariable = Environment.GetEnvironmentVariable("MSBUILDNOINPROCNODE") == "1";
+            ForceAffinityOutOfProc = ChangeWaves.AreFeaturesEnabled(ChangeWaves.Wave17_0)
+                ? inprocNodeDisabledViaEnvironmentVariable || _componentHost.BuildParameters.DisableInProcNode
+                : inprocNodeDisabledViaEnvironmentVariable;
         }
 
         /// <summary>
@@ -1355,12 +1358,6 @@ namespace Microsoft.Build.BackEnd
             ErrorUtilities.VerifyThrowArgumentNull(responses, nameof(responses));
             ErrorUtilities.VerifyThrow(nodeId != InvalidNodeId, "Invalid node id specified.");
 
-            // Currently we cannot move certain kinds of traversals (notably solution metaprojects) to other nodes because 
-            // they only have a ProjectInstance representation, and besides these kinds of projects build very quickly 
-            // and produce more references (more work to do.)  This just verifies we do not attempt to send a traversal to
-            // an out-of-proc node because doing so is inefficient and presently will cause the engine to fail on the remote
-            // node because these projects cannot be found.
-            ErrorUtilities.VerifyThrow(nodeId == InProcNodeId || _forceAffinityOutOfProc || !IsTraversalRequest(request.BuildRequest), "Can't assign traversal request to out-of-proc node!");
             request.VerifyState(SchedulableRequestState.Unscheduled);
 
             // Determine if this node has seen our configuration before.  If not, we must send it along with this request.
@@ -1388,7 +1385,7 @@ namespace Microsoft.Build.BackEnd
                 if (request.IsProxyBuildRequest() && nodeId != InProcNodeId && _schedulingData.CanScheduleRequestToNode(request, InProcNodeId))
                 {
                     ErrorUtilities.VerifyThrow(
-                        _componentHost.BuildParameters.DisableInProcNode || _forceAffinityOutOfProc,
+                        _componentHost.BuildParameters.DisableInProcNode || ForceAffinityOutOfProc,
                         "Proxy requests should only get scheduled to out of proc nodes when the inproc node is disabled");
 
                     var loggedWarnings = Interlocked.CompareExchange(ref _loggedWarningsForProxyBuildsOnOutOfProcNodes, 1, 0);
@@ -2097,7 +2094,7 @@ namespace Microsoft.Build.BackEnd
         /// </summary>
         private NodeAffinity GetNodeAffinityForRequest(BuildRequest request)
         {
-            if (_forceAffinityOutOfProc)
+            if (ForceAffinityOutOfProc)
             {
                 return NodeAffinity.OutOfProc;
             }

@@ -326,20 +326,39 @@ namespace Microsoft.Build.Engine.UnitTests.Globbing
         [InlineData(
             @"a/b\c",
             @"d/e\f/**\a.cs",
-            @"d\e/f\g/h\i/a.cs")]
+            @"d\e/f\g/h\i/a.cs",
+            @"d\e/f\", @"g/h\i/", @"a.cs")]
         [InlineData(
             @"a/b\c",
             @"d/e\f/*b*\*.cs",
-            @"d\e/f\abc/a.cs")]
+            @"d\e/f\abc/a.cs",
+            @"d\e/f\", @"abc/", @"a.cs")]
         [InlineData(
             @"a/b/\c",
             @"d/e\/*b*/\*.cs",
-            @"d\e\\abc/\a.cs")]
-        public void GlobMatchingIgnoresSlashOrientationAndRepetitions(string globRoot, string fileSpec, string stringToMatch)
+            @"d\e\\abc/\a.cs",
+            @"d\e\\", @"abc\\", @"a.cs")]
+        public void GlobMatchingIgnoresSlashOrientationAndRepetitions(string globRoot, string fileSpec, string stringToMatch,
+            string fixedDirectoryPart, string wildcardDirectoryPart, string filenamePart)
         {
             var glob = MSBuildGlob.Parse(globRoot, fileSpec);
 
             Assert.True(glob.IsMatch(stringToMatch));
+
+            MSBuildGlob.MatchInfoResult result = glob.MatchInfo(stringToMatch);
+            Assert.True(result.IsMatch);
+
+            string NormalizeSlashes(string path)
+            {
+                string normalizedPath = path.Replace(Path.DirectorySeparatorChar == '/' ? '\\' : '/', Path.DirectorySeparatorChar);
+                return NativeMethodsShared.IsWindows ? normalizedPath.Replace("\\\\", "\\") : normalizedPath;
+            }
+
+            var rootedFixedDirectoryPart = Path.Combine(FileUtilities.NormalizePath(globRoot), fixedDirectoryPart);
+
+            Assert.Equal(FileUtilities.GetFullPathNoThrow(rootedFixedDirectoryPart), result.FixedDirectoryPartMatchGroup);
+            Assert.Equal(NormalizeSlashes(wildcardDirectoryPart), result.WildcardDirectoryPartMatchGroup);
+            Assert.Equal(NormalizeSlashes(filenamePart), result.FilenamePartMatchGroup);
         }
     }
 }

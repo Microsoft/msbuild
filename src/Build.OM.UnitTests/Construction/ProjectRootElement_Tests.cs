@@ -395,7 +395,7 @@ namespace Microsoft.Build.UnitTests.OM.Construction
                     <Project xmlns='http://schemas.microsoft.com/developer/msbuild/2003'>
                         <ItemGroup>
                            <XXX YYY='ZZZ'/>
-                        </ItemGroup> 
+                        </ItemGroup>
                     </Project>
                 ";
 
@@ -416,7 +416,7 @@ namespace Microsoft.Build.UnitTests.OM.Construction
                     <Project xmlns='http://schemas.microsoft.com/developer/msbuild/2003'>
                         <ItemGroup>
                            <XXX YYY='ZZZ'/>
-                        </ItemGroup> 
+                        </ItemGroup>
                     </Project>
                 ";
 
@@ -1392,7 +1392,7 @@ true, false, false)]
   <PropertyGroup>
     <P><!-- new comment -->property value<!-- new comment --></P>
   </PropertyGroup>
-  
+
   <!-- new comment -->
   <ItemGroup>
     <i Include=`a`>
@@ -1412,7 +1412,7 @@ true, false, true)]
   <PropertyGroup>
     <P><!-- new comment -->property value<!-- new comment --></P>
   </PropertyGroup>
-  
+
   <!-- new comment -->
   <ItemGroup>
     <i Include=`a`>
@@ -1428,7 +1428,7 @@ true, false, true)]
   <PropertyGroup>
     <P><!-- changed comment -->property value<!-- changed comment --></P>
   </PropertyGroup>
-  
+
   <!-- changed comment -->
   <ItemGroup>
     <i Include=`a`>
@@ -1448,7 +1448,7 @@ true, false, true)]
   <PropertyGroup>
     <P><!-- new comment -->property value<!-- new comment --></P>
   </PropertyGroup>
-  
+
   <!-- new comment -->
   <ItemGroup>
     <i Include=`a`>
@@ -1463,7 +1463,7 @@ true, false, true)]
   <PropertyGroup>
     <P>property value</P>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <i Include=`a`>
       <m>metadata value</m>
@@ -1562,7 +1562,7 @@ true, true, true)]
 @"
 <!-- changed comment -->
 <Project xmlns=`msbuildnamespace`>
-  
+
   <!-- changed comment -->
   <ItemGroup>
 
@@ -1580,7 +1580,7 @@ true, true, true)]
 @"
 <!-- changed comment -->
 <Project xmlns=`msbuildnamespace`>
-  
+
   <!-- changed comment -->
   <PropertyGroup>
     <P>v</P>

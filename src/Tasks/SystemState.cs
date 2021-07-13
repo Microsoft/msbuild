@@ -12,7 +12,6 @@ using System.Runtime.Versioning;
 using Microsoft.Build.BackEnd;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
-using Microsoft.Build.Shared.FileSystem;
 using Microsoft.Build.Tasks.AssemblyDependency;
 using Microsoft.Build.Utilities;
 
@@ -21,12 +20,10 @@ namespace Microsoft.Build.Tasks
     /// <summary>
     /// Class is used to cache system state.
     /// </summary>
+    /// Serializable should be included in all state files. It permits BinaryFormatter-based calls, including from GenerateResource, which we cannot move off BinaryFormatter.
     [Serializable]
     internal sealed class SystemState : StateFileBase, ITranslatable
     {
-        private static readonly byte[] TranslateContractSignature = { (byte) 'M', (byte) 'B', (byte) 'R', (byte) 'S', (byte) 'C'}; // Microsoft Build RAR State Cache
-        private static readonly byte TranslateContractVersion = 0x01;
-
         /// <summary>
         /// Cache at the SystemState instance level. Has the same contents as <see cref="instanceLocalFileStateCache"/>.
         /// It acts as a flag to enforce that an entry has been checked for staleness only once.
@@ -88,11 +85,6 @@ namespace Microsoft.Build.Tasks
         /// Cached delegate.
         /// </summary>
         private GetAssemblyMetadata getAssemblyMetadata;
-
-        /// <summary>
-        /// Cached delegate.
-        /// </summary>
-        private FileExists fileExists;
 
         /// <summary>
         /// Cached delegate.
@@ -221,8 +213,13 @@ namespace Microsoft.Build.Tasks
         /// <summary>
         /// Construct.
         /// </summary>
-        internal SystemState()
+        public SystemState()
         {
+        }
+
+        public SystemState(ITranslator translator)
+        {
+            Translate(translator);
         }
 
         /// <summary>
@@ -240,87 +237,10 @@ namespace Microsoft.Build.Tasks
         }
 
         /// <summary>
-        /// Writes the contents of this object out to the specified file.
-        /// TODO: once all derived classes from StateFileBase adopt new serialization, we shall consider to mode this into base class
-        /// </summary>
-        internal void SerializeCacheByTranslator(string stateFile, TaskLoggingHelper log)
-        {
-            try
-            {
-                if (!string.IsNullOrEmpty(stateFile))
-                {
-                    if (FileSystems.Default.FileExists(stateFile))
-                    {
-                        File.Delete(stateFile);
-                    }
-
-                    using var s = new FileStream(stateFile, FileMode.CreateNew);
-                    var translator = BinaryTranslator.GetWriteTranslator(s);
-
-                    // write file signature
-                    translator.Writer.Write(TranslateContractSignature);
-                    translator.Writer.Write(TranslateContractVersion);
-
-                    Translate(translator);
-                    isDirty = false;
-                }
-            }
-            catch (Exception e) when (!ExceptionHandling.NotExpectedSerializationException(e))
-            {
-                // Not being able to serialize the cache is not an error, but we let the user know anyway.
-                // Don't want to hold up processing just because we couldn't read the file.
-                log.LogWarningWithCodeFromResources("General.CouldNotWriteStateFile", stateFile, e.Message);
-            }
-        }
-
-        /// <summary>
-        /// Read the contents of this object out to the specified file.
-        /// TODO: once all classes derived from StateFileBase adopt the new serialization, we should consider moving this into the base class
-        /// </summary>
-        internal static SystemState DeserializeCacheByTranslator(string stateFile, TaskLoggingHelper log)
-        {
-            // First, we read the cache from disk if one exists, or if one does not exist, we create one.
-            try
-            {
-                if (!string.IsNullOrEmpty(stateFile) && FileSystems.Default.FileExists(stateFile))
-                {
-                    using FileStream s = File.OpenRead(stateFile);
-                    var translator = BinaryTranslator.GetReadTranslator(s, buffer:null); // TODO: shared buffering?
-
-                    // verify file signature
-                    var contractSignature = translator.Reader.ReadBytes(TranslateContractSignature.Length);
-                    var contractVersion = translator.Reader.ReadByte();
-
-                    if (!contractSignature.SequenceEqual(TranslateContractSignature) || contractVersion != TranslateContractVersion)
-                    {
-                        log.LogMessageFromResources("General.CouldNotReadStateFileMessage", stateFile, log.FormatResourceString("General.IncompatibleStateFileType"));
-                        return null;
-                    }
-
-                    SystemState systemState = new SystemState();
-                    systemState.Translate(translator);
-                    systemState.isDirty = false;
-
-                    return systemState;
-                }
-            }
-            catch (Exception e) when (!ExceptionHandling.IsCriticalException(e))
-            {
-                // The deserialization process seems like it can throw just about 
-                // any exception imaginable.  Catch them all here.
-                // Not being able to deserialize the cache is not an error, but we let the user know anyway.
-                // Don't want to hold up processing just because we couldn't read the file.
-                log.LogMessageFromResources("General.CouldNotReadStateFileMessage", stateFile, e.Message);
-            }
-
-            return null;
-        }
-
-        /// <summary>
         /// Reads/writes this class.
         /// Used for serialization and deserialization of this class persistent cache.
         /// </summary>
-        public void Translate(ITranslator translator)
+        public override void Translate(ITranslator translator)
         {
             if (instanceLocalFileStateCache is null)
                 throw new NullReferenceException(nameof(instanceLocalFileStateCache));
@@ -329,6 +249,10 @@ namespace Microsoft.Build.Tasks
                 ref instanceLocalFileStateCache,
                 StringComparer.OrdinalIgnoreCase,
                 (ITranslator t) => new FileState(t));
+
+            // IsDirty should be false for either direction. Either this cache was brought
+            // up-to-date with the on-disk cache or vice versa. Either way, they agree.
+            IsDirty = false;
         }
 
         /// <summary>
@@ -375,11 +299,9 @@ namespace Microsoft.Build.Tasks
         /// <summary>
         /// Cache the results of a FileExists delegate. 
         /// </summary>
-        /// <param name="fileExistsValue">The delegate.</param>
         /// <returns>Cached version of the delegate.</returns>
-        internal FileExists CacheDelegate(FileExists fileExistsValue)
+        internal FileExists CacheDelegate()
         {
-            fileExists = fileExistsValue;
             return FileExists;
         }
 
@@ -605,7 +527,7 @@ namespace Microsoft.Build.Tasks
         /// <param name="log">How to log</param>
         /// <param name="fileExists">Whether a file exists</param>
         /// <returns>A cache representing key aspects of file states.</returns>
-        internal static SystemState DeserializePrecomputedCachesByTranslator(ITaskItem[] stateFiles, TaskLoggingHelper log, FileExists fileExists)
+        internal static SystemState DeserializePrecomputedCaches(ITaskItem[] stateFiles, TaskLoggingHelper log, FileExists fileExists)
         {
             SystemState retVal = new SystemState();
             retVal.isDirty = stateFiles.Length > 0;
@@ -614,7 +536,7 @@ namespace Microsoft.Build.Tasks
             foreach (ITaskItem stateFile in stateFiles)
             {
                 // Verify that it's a real stateFile. Log message but do not error if not.
-                SystemState sysState = DeserializeCacheByTranslator(stateFile.ToString(), log);
+                SystemState sysState = DeserializeCache(stateFile.ToString(), log, typeof(SystemState)) as SystemState;
                 if (sysState == null)
                 {
                     continue;
@@ -644,7 +566,7 @@ namespace Microsoft.Build.Tasks
         /// </summary>
         /// <param name="stateFile">Path to which to write the precomputed cache</param>
         /// <param name="log">How to log</param>
-        internal void SerializePrecomputedCacheByTranslator(string stateFile, TaskLoggingHelper log)
+        internal void SerializePrecomputedCache(string stateFile, TaskLoggingHelper log)
         {
             // Save a copy of instanceLocalFileStateCache so we can restore it later. SerializeCacheByTranslator serializes
             // instanceLocalFileStateCache by default, so change that to the relativized form, then change it back.
@@ -657,7 +579,7 @@ namespace Microsoft.Build.Tasks
                 {
                     log.LogWarningWithCodeFromResources("General.StateFileAlreadyPresent", stateFile);
                 }
-                SerializeCacheByTranslator(stateFile, log);
+                SerializeCache(stateFile, log);
             }
             finally
             {

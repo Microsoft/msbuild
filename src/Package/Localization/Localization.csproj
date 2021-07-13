@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework Condition="$(MonoBuild) != 'true'">net5.0</TargetFramework>
+    <TargetFramework Condition="$(MonoBuild) != 'true'">net6.0</TargetFramework>
     <TargetFramework Condition="$(MonoBuild) == 'true'">net472</TargetFramework>
     <NuspecFile>Microsoft.Build.Localization.nuspec</NuspecFile>
     <IsShipping>false</IsShipping>

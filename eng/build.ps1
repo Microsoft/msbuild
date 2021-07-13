@@ -40,7 +40,7 @@ function Print-Usage() {
   Write-Host "  -verbosity <value>      Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic] (short: -v)"
   Write-Host "  -binaryLog              Output binary log (short: -bl)"
   Write-Host ""
- 
+
   Write-Host "Actions:"
   Write-Host "  -restore                Restore dependencies (short: -r)"
   Write-Host "  -build                  Build solution (short: -b)"
@@ -55,14 +55,14 @@ function Print-Usage() {
   Write-Host "  -sign                   Sign build outputs"
   Write-Host "  -publish                Publish artifacts (e.g. symbols)"
   Write-Host ""
- 
+
   Write-Host "Advanced settings:"
   Write-Host "  -projects <value>       Semi-colon delimited list of sln/proj's to build. Globbing is supported (*.sln)"
   Write-Host "  -ci                     Set when running on CI server"
   Write-Host "  -prepareMachine         Prepare machine for CI run"
   Write-Host "  -msbuildEngine <value>  Msbuild engine to use to run build ('dotnet', 'vs', or unspecified)."
   Write-Host ""
- 
+
   Write-Host "Official build settings:"
   Write-Host "  -officialBuildId                            An official build id, e.g. 20190102.3"
   Write-Host "  -officialSkipApplyOptimizationData <bool>   Pass 'true' to not apply optimization data"
@@ -158,7 +158,7 @@ function Check-EditedFiles() {
 
 try {
   Process-Arguments
- 
+
   # Import Arcade functions
   . (Join-Path $PSScriptRoot "common\tools.ps1")
   . (Join-Path $PSScriptRoot "configure-toolset.ps1")

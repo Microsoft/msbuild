@@ -2,7 +2,7 @@
 <!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the MIT license. See License.txt in the project root for full license information. -->
 <Project>
   <PropertyGroup>
-    <VersionPrefix>16.11.0</VersionPrefix>
+    <VersionPrefix>17.0.0</VersionPrefix>
     <AssemblyVersion>15.1.0.0</AssemblyVersion>
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
     <DotNetUseShippingVersions>true</DotNetUseShippingVersions>
@@ -23,13 +23,18 @@
          Can be removed after Arcade moves up. -->
     <MicrosoftVSSDKBuildToolsVersion>16.7.13</MicrosoftVSSDKBuildToolsVersion>
   </PropertyGroup>
+  <!-- Production Dependencies -->
+  <PropertyGroup>
+    <SystemResourcesExtensionsPackageVersion>4.6.0</SystemResourcesExtensionsPackageVersion>
+  </PropertyGroup>
   <!-- Toolset Dependencies -->
   <PropertyGroup>
     <!-- DotNetCliVersion MUST match the dotnet version in global.json.
          Otherwise, this version of dotnet will not be installed and the build will error out. -->
-    <DotNetCliVersion>5.0.102</DotNetCliVersion>
-    <MicrosoftNetCompilersToolsetVersion>3.9.0-2.20574.26</MicrosoftNetCompilersToolsetVersion>
-    <NuGetBuildTasksVersion>5.9.1-rc.8</NuGetBuildTasksVersion>
+    <DotNetCliVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)..\global.json')), '"dotnet": "([^"]*)"').Groups.get_Item(1))</DotNetCliVersion>
+    <MicrosoftExtensionsDependencyModelVersion>6.0.0-preview.2.21154.6</MicrosoftExtensionsDependencyModelVersion>
+    <MicrosoftNetCompilersToolsetVersion>4.0.0-2.21320.2</MicrosoftNetCompilersToolsetVersion>
+    <NuGetBuildTasksVersion>6.0.0-preview.1.107</NuGetBuildTasksVersion>
   </PropertyGroup>
   <Target Name="OverrideArcadeFileVersion" AfterTargets="_InitializeAssemblyVersion">
     <!-- See https://github.com/dotnet/arcade/issues/3386

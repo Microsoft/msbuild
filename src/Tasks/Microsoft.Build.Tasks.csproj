@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="..\Shared\FileSystemSources.proj" />
   <Import Project="..\Shared\DebuggingSources.proj" />
@@ -91,7 +91,7 @@
     <Compile Include="..\Shared\NGen.cs">
       <Link>NGen.cs</Link>
     </Compile>
-    <Compile Include="..\Shared\IConstrainedEqualityComparer.cs"/>
+    <Compile Include="..\Shared\IConstrainedEqualityComparer.cs" />
     <Compile Include="..\Shared\PropertyParser.cs">
       <Link>PropertyParser.cs</Link>
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
@@ -554,7 +554,6 @@
     <Compile Include="CodeTaskFactory.cs" />
     <Compile Include="XamlTaskFactory\XamlTaskFactory.cs" />
     <Compile Include="StateFileBase.cs" />
-    <Compile Include="Dependencies.cs" />
     <Compile Include="SystemState.cs" />
     <Compile Include="DependencyFile.cs" />
     <Compile Include="ZipDirectory.cs" />
@@ -792,6 +791,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Microsoft.VisualStudioVersion.v16.Common.props">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Microsoft.VisualStudioVersion.v17.Common.props">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <!-- Resource Files -->

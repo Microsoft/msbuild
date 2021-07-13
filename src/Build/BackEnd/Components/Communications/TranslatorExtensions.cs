@@ -4,10 +4,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Execution;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
-using System.Reflection;
 
 namespace Microsoft.Build.BackEnd
 {
@@ -102,6 +103,18 @@ namespace Microsoft.Build.BackEnd
             targetInstanceChild.Translate(translator);
 
             return (T) targetInstanceChild;
+        }
+
+        public static void TranslateOptionalBuildEventContext(this ITranslator translator, ref BuildEventContext buildEventContext)
+        {
+            if (translator.Mode == TranslationDirection.ReadFromStream)
+            {
+                buildEventContext = translator.Reader.ReadOptionalBuildEventContext();
+            }
+            else
+            {
+                translator.Writer.WriteOptionalBuildEventContext(buildEventContext);
+            }
         }
     }
 }

@@ -43,7 +43,7 @@ namespace Microsoft.Build.Evaluation
     /// Edits to this project always update the backing XML.
     /// </summary>
     // UNDONE: (Multiple configurations.) Protect against problems when attempting to edit, after edits were made to the same ProjectRootElement either directly or through other projects evaluated from that ProjectRootElement.
-    [DebuggerDisplay("{FullPath} EffectiveToolsVersion={ToolsVersion} #GlobalProperties={_data.GlobalPropertiesDictionary.Count} #Properties={_data.Properties.Count} #ItemTypes={_data.ItemTypes.Count} #ItemDefinitions={_data.ItemDefinitions.Count} #Items={_data.Items.Count} #Targets={_data.Targets.Count}")]
+    [DebuggerDisplay("{FullPath} EffectiveToolsVersion={ToolsVersion} #GlobalProperties={implementation._data.GlobalPropertiesDictionary.Count} #Properties={implementation._data.Properties.Count} #ItemTypes={implementation._data.ItemTypes.Count} #ItemDefinitions={implementation._data.ItemDefinitions.Count} #Items={implementation._data.Items.Count} #Targets={implementation._data.Targets.Count}")]
     public class Project : ILinkableObject
     {
         /// <summary>
@@ -461,7 +461,7 @@ namespace Microsoft.Build.Evaluation
             {
                 // If possible, clear out the XML we just loaded into the XML cache:
                 // if we had loaded the XML from disk into the cache within this constructor,
-                // and then are are bailing out because there is a typo in the XML such that 
+                // and then are are bailing out because there is a typo in the XML such that
                 // evaluation failed, we don't want to leave the bad XML in the cache;
                 // the user wouldn't be able to fix the XML file and try again.
                 if (!ExceptionHandling.IsCriticalException(ex))
@@ -2503,7 +2503,7 @@ namespace Microsoft.Build.Evaluation
                 // 5. <I Include="C"/>
                 // 6. <I Remove="..."/> // this remove applies to the includes at 1, 3, 5
                 // So A's applicable removes are composed of:
-                // 
+                //
                 // The applicable removes for the element at position 1 (xml element A) are composed of:
                 // - all the removes seen by the next include statement of I's type (xml element B, position 3, which appears after A in file order). In this example that's Removes at positions 4 and 6.
                 // - new removes between A and B. In this example that's Remove 2.
@@ -2634,7 +2634,7 @@ namespace Microsoft.Build.Evaluation
             /// <summary>
             /// See <see cref="ProjectLink.GetItemProvenance(ProjectItem, EvaluationContext)"/>.
             /// </summary>
-            /// /// <param name="item"> 
+            /// /// <param name="item">
             /// The ProjectItem object that indicates: the itemspec to match and the item type to constrain the search in.
             /// The search is also constrained on item elements appearing before the item element that produced this <paramref name="item"/>.
             /// The element that produced this <paramref name="item"/> is included in the results.
@@ -3163,7 +3163,7 @@ namespace Microsoft.Build.Evaluation
                 ErrorUtilities.VerifyThrowArgumentNull(items, nameof(items));
 
                 // Copying to a list makes it possible to remove
-                // all items of a particular type with 
+                // all items of a particular type with
                 //   RemoveItems(p.GetItems("mytype"))
                 // without modifying the collection during enumeration.
                 var itemsList = new List<ProjectItem>(items);
@@ -3586,7 +3586,7 @@ namespace Microsoft.Build.Evaluation
                 EvaluationContext evaluationContext = null)
             {
                 // We will skip the evaluation if the flag is set. This will give us better performance on scenarios
-                // that we know we don't have to reevaluate. One example is project conversion bulk addfiles and set attributes. 
+                // that we know we don't have to reevaluate. One example is project conversion bulk addfiles and set attributes.
                 if (!SkipEvaluation && !ProjectCollection.SkipEvaluation && IsDirty)
                 {
                     try
@@ -3684,9 +3684,9 @@ namespace Microsoft.Build.Evaluation
                     {
                         if (String.Equals(pair.Key, Constants.SubToolsetVersionPropertyName, StringComparison.OrdinalIgnoreCase) && subToolsetVersion != null)
                         {
-                            // if we have a sub-toolset version explicitly provided by the ProjectInstance constructor, AND a sub-toolset version provided as a global property, 
-                            // make sure that the one passed in with the constructor wins.  If there isn't a matching global property, the sub-toolset version will be set at 
-                            // a later point. 
+                            // if we have a sub-toolset version explicitly provided by the ProjectInstance constructor, AND a sub-toolset version provided as a global property,
+                            // make sure that the one passed in with the constructor wins.  If there isn't a matching global property, the sub-toolset version will be set at
+                            // a later point.
                             globalPropertiesCollection.Set(ProjectPropertyInstance.Create(pair.Key, subToolsetVersion));
                         }
                         else
@@ -4185,7 +4185,7 @@ namespace Microsoft.Build.Evaluation
 
                 _globalPropertiesToTreatAsLocal?.Clear();
 
-                // Include the main project in the list of imports, as this list is 
+                // Include the main project in the list of imports, as this list is
                 // used to figure out if any of them have changed.
                 RecordImport(null, Project.Xml, Project.Xml.Version, null);
 
@@ -4225,7 +4225,7 @@ namespace Microsoft.Build.Evaluation
                     SubToolsetVersion = Toolset.GenerateSubToolsetVersion(GlobalPropertiesDictionary);
                 }
 
-                // Create a task registry which will fall back on the toolset task registry if necessary.          
+                // Create a task registry which will fall back on the toolset task registry if necessary.
                 TaskRegistry = new TaskRegistry(Toolset, Project.ProjectCollection.ProjectRootElementCache);
             }
 
@@ -4235,7 +4235,7 @@ namespace Microsoft.Build.Evaluation
             /// </summary>
             public void FinishEvaluation()
             {
-                // We assume there will be no further changes to the targets collection 
+                // We assume there will be no further changes to the targets collection
                 // This also makes sure that we are thread safe
                 Targets.MakeReadOnly();
 
@@ -4254,7 +4254,7 @@ namespace Microsoft.Build.Evaluation
                     }
                     else
                     {
-                        // Else we'll guess that this latest one is a potential match for the next, 
+                        // Else we'll guess that this latest one is a potential match for the next,
                         // if it actually has any elements (eg., it's not a .user or .filters file)
                         if (Targets.Count > 0)
                         {
@@ -4489,7 +4489,7 @@ namespace Microsoft.Build.Evaluation
 
                 // This remove will not succeed if the item include was changed.
                 // If many items are modified and then removed, this will leak them
-                // until the next reevaluation.                
+                // until the next reevaluation.
                 ItemsByEvaluatedIncludeCache.Remove(item.EvaluatedInclude, item);
 
                 ItemsIgnoringCondition.Remove(item);

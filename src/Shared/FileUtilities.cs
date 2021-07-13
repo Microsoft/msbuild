@@ -586,7 +586,7 @@ namespace Microsoft.Build.Shared
             ReadOnlySpan<char> directory = value.Slice(0, directoryLength);
 
             return (shouldCheckDirectory && DefaultFileSystem.DirectoryExists(Path.Combine(baseDirectory, directory.ToString())))
-                || (shouldCheckFileOrDirectory && DefaultFileSystem.DirectoryEntryExists(value.ToString()));
+                || (shouldCheckFileOrDirectory && DefaultFileSystem.FileOrDirectoryExists(value.ToString()));
         }
 #endif
 
@@ -951,8 +951,8 @@ namespace Microsoft.Build.Shared
                 fileSystem ??= DefaultFileSystem;
 
                 return Traits.Instance.CacheFileExistence
-                    ? FileExistenceCache.GetOrAdd(fullPath, fileSystem.DirectoryEntryExists)
-                    : fileSystem.DirectoryEntryExists(fullPath);
+                    ? FileExistenceCache.GetOrAdd(fullPath, fileSystem.FileOrDirectoryExists)
+                    : fileSystem.FileOrDirectoryExists(fullPath);
             }
             catch
             {

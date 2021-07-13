@@ -2,7 +2,7 @@
 name: 📉 Performance Issue
 about: Report a performance issue or regression.
 title: ''
-labels: performance, untriaged
+labels: performance, needs-triage
 ---
 
 <!-- This is a template that helps us provide quicker feedback. Please use any relevant sections and delete anything you don't need. -->

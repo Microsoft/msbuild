@@ -1,5 +1,5 @@
 <Project>
-    <Target Name="CopyAMD64Symbols" Condition="'$(OfficialBuild)' == 'true'" BeforeTargets="Build">
+    <Target Name="CopyAMD64Symbols" Condition="'$(OfficialBuild)' == 'true' AND '$(ArcadeBuildFromSource)' != 'true'" BeforeTargets="Build">
         <Copy 
             SourceFiles="$(ArtifactsBinDir)MSBuild\x64\Release\net472\MSBuild.pdb"
             DestinationFolder="$(ArtifactsSymStoreDirectory)\MSBuild\net472\amd64"

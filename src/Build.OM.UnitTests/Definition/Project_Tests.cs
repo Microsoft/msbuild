@@ -1839,11 +1839,11 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                             <When Condition='true'>
                               <PropertyGroup>
                                 <p>v1</p>
-                              </PropertyGroup> 
+                              </PropertyGroup>
                               <ItemGroup>
                                 <i Include='i1' />
                               </ItemGroup>
-                            </When>      
+                            </When>
                         </Choose>
                     </Project>
                 ");
@@ -1866,19 +1866,19 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                             <When Condition='false'>
                               <PropertyGroup>
                                 <p>v1</p>
-                              </PropertyGroup> 
+                              </PropertyGroup>
                               <ItemGroup>
                                 <i Include='i1' />
                               </ItemGroup>
-                            </When>   
+                            </When>
                             <When Condition='true'>
                               <PropertyGroup>
                                 <p>v2</p>
-                              </PropertyGroup> 
+                              </PropertyGroup>
                               <ItemGroup>
                                 <i Include='i2' />
                               </ItemGroup>
-                            </When>    
+                            </When>
                         </Choose>
                     </Project>
                 ");
@@ -1901,19 +1901,19 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                             <When Condition='false'>
                               <PropertyGroup>
                                 <p>v1</p>
-                              </PropertyGroup> 
+                              </PropertyGroup>
                               <ItemGroup>
                                 <i Include='i1' />
                               </ItemGroup>
-                            </When>   
+                            </When>
                             <Otherwise>
                               <PropertyGroup>
                                 <p>v2</p>
-                              </PropertyGroup> 
+                              </PropertyGroup>
                               <ItemGroup>
                                 <i Include='i2' />
                               </ItemGroup>
-                            </Otherwise>    
+                            </Otherwise>
                         </Choose>
                     </Project>
                 ");
@@ -1940,13 +1940,13 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                               </ItemGroup>
                               <PropertyGroup>
                                 <p>@(i);v1</p>
-                              </PropertyGroup> 
-                            </When>      
+                              </PropertyGroup>
+                            </When>
                         </Choose>
 
                       <PropertyGroup>
                         <p2>v2</p2>
-                      </PropertyGroup> 
+                      </PropertyGroup>
 
                         <Choose>
                             <When Condition='false'/>
@@ -1956,13 +1956,13 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                               </ItemGroup>
                               <PropertyGroup>
                                 <q>@(j);v1</q>
-                              </PropertyGroup> 
+                              </PropertyGroup>
                             </Otherwise>
                         </Choose>
 
                       <PropertyGroup>
                         <q2>v2</q2>
-                      </PropertyGroup> 
+                      </PropertyGroup>
                     </Project>
                 ");
 
@@ -2019,14 +2019,14 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                                   <m>%(m);m1</m>
                                 </i>
                               </ItemGroup>
-                            </When>      
+                            </When>
                         </Choose>
 
                       <ItemDefinitionGroup>
                         <i>
                           <m>m0</m>
                         </i>
-                      </ItemDefinitionGroup> 
+                      </ItemDefinitionGroup>
 
                     </Project>
                 ");
@@ -3078,7 +3078,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                   </ItemGroup>
 
                   <PropertyGroup>
-                    <P>1;2;3;@(B)</P>  
+                    <P>1;2;3;@(B)</P>
                   </PropertyGroup>
                 </Project>
                 ";
@@ -3104,7 +3104,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                   </ItemGroup>
 
                   <PropertyGroup>
-                    <P>1;2;3;@(B)</P>  
+                    <P>1;2;3;@(B)</P>
                   </PropertyGroup>
                 </Project>
                 ";
@@ -3130,7 +3130,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                   </ItemGroup>
 
                   <PropertyGroup>
-                    <P>@(B)</P>  
+                    <P>@(B)</P>
                   </PropertyGroup>
                 </Project>
                 ";
@@ -3158,7 +3158,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                   </ItemGroup>
 
                   <PropertyGroup>
-                    <P></P>  
+                    <P></P>
                   </PropertyGroup>
                 </Project>
                 ";
@@ -3918,7 +3918,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                     eventArgs.LineNumber.ShouldBe(6);
                     eventArgs.ColumnNumber.ShouldBe(3);
 
-                    logger.AssertLogContains($"Project \"{import.Project}\" was not imported by \"{pre.FullPath}\" at ({eventArgs.LineNumber},{eventArgs.ColumnNumber}), due to false condition; ( \'$(Something)\' == \'nothing\' ) was evaluated as ( \'\' == \'nothing\' )."); 
+                    logger.AssertLogContains($"Project \"{import.Project}\" was not imported by \"{pre.FullPath}\" at ({eventArgs.LineNumber},{eventArgs.ColumnNumber}), due to false condition; ( \'$(Something)\' == \'nothing\' ) was evaluated as ( \'\' == \'nothing\' ).");
                 }
             }
         }

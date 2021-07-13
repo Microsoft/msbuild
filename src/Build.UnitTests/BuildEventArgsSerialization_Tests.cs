@@ -160,11 +160,15 @@ namespace Microsoft.Build.UnitTests
                 projectFile: "C:\\project.proj",
                 taskFile: "C:\\common.targets",
                 taskName: "Csc");
+            args.LineNumber = 42;
+            args.ColumnNumber = 999;
 
             Roundtrip(args,
                 e => e.ProjectFile,
                 e => e.TaskFile,
-                e => e.TaskName);
+                e => e.TaskName,
+                e => e.LineNumber.ToString(),
+                e => e.ColumnNumber.ToString());
         }
 
         [Fact]
@@ -327,11 +331,15 @@ namespace Microsoft.Build.UnitTests
                 new TaskItemData("ItemSpec2", Enumerable.Range(1,3).ToDictionary(i => i.ToString(), i => i.ToString() + "value"))
             };
             var args = new TaskParameterEventArgs(TaskParameterMessageKind.TaskOutput, "ItemName", items, true, DateTime.MinValue);
+            args.LineNumber = 265;
+            args.ColumnNumber = 6;
 
             Roundtrip(args,
                 e => e.Kind.ToString(),
                 e => e.ItemType,
                 e => e.LogItemMetadata.ToString(),
+                e => e.LineNumber.ToString(),
+                e => e.ColumnNumber.ToString(),
                 e => TranslationHelpers.GetItemsString(e.Items));
         }
 
@@ -443,20 +451,31 @@ namespace Microsoft.Build.UnitTests
                 ProjectFile = "foo.csproj",
                 TargetName = "target",
                 ParentTarget = "bar",
-                BuildReason = TargetBuiltReason.DependsOn
+                BuildReason = TargetBuiltReason.DependsOn,
+                SkipReason = TargetSkipReason.PreviouslyBuiltSuccessfully,
+                Condition = "$(condition) == true",
+                EvaluatedCondition = "true == true",
+                OriginalBuildEventContext = new BuildEventContext(1, 2, 3, 4, 5, 6, 7),
+                OriginallySucceeded = false,
+                TargetFile = "foo.csproj"
             };
 
             Roundtrip(args,
+                e => e.BuildEventContext.ToString(),
                 e => e.ParentTarget,
                 e => e.Importance.ToString(),
                 e => e.LineNumber.ToString(),
                 e => e.ColumnNumber.ToString(),
-                e => e.LineNumber.ToString(),
                 e => e.Message,
                 e => e.ProjectFile,
                 e => e.TargetFile,
                 e => e.TargetName,
-                e => e.BuildReason.ToString());
+                e => e.BuildReason.ToString(),
+                e => e.SkipReason.ToString(),
+                e => e.Condition,
+                e => e.EvaluatedCondition,
+                e => e.OriginalBuildEventContext.ToString(),
+                e => e.OriginallySucceeded.ToString());
         }
 
         [Fact]

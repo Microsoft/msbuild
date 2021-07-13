@@ -73,7 +73,7 @@ namespace Microsoft.Build.Shared.FileSystem
             return File.Exists(path);
         }
 
-        public virtual bool DirectoryEntryExists(string path)
+        public virtual bool FileOrDirectoryExists(string path)
         {
             return FileExists(path) || DirectoryExists(path);
         }

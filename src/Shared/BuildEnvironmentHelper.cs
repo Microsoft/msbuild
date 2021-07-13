@@ -15,7 +15,7 @@ namespace Microsoft.Build.Shared
     {
         // Since this class is added as 'link' to shared source in multiple projects,
         // MSBuildConstants.CurrentVisualStudioVersion is not available in all of them.
-        private const string CurrentVisualStudioVersion = "16.0";
+        private const string CurrentVisualStudioVersion = "17.0";
 
         // MSBuildConstants.CurrentToolsVersion
         private const string CurrentToolsVersion = "Current";

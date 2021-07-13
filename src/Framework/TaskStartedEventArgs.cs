@@ -91,6 +91,8 @@ namespace Microsoft.Build.Framework
             writer.WriteOptionalString(taskName);
             writer.WriteOptionalString(projectFile);
             writer.WriteOptionalString(taskFile);
+            writer.Write7BitEncodedInt(LineNumber);
+            writer.Write7BitEncodedInt(ColumnNumber);
         }
 
         /// <summary>
@@ -105,6 +107,8 @@ namespace Microsoft.Build.Framework
             taskName = reader.ReadByte() == 0 ? null : reader.ReadString();
             projectFile = reader.ReadByte() == 0 ? null : reader.ReadString();
             taskFile = reader.ReadByte() == 0 ? null : reader.ReadString();
+            LineNumber = reader.Read7BitEncodedInt();
+            ColumnNumber = reader.Read7BitEncodedInt();
         }
         #endregion
 
@@ -122,6 +126,16 @@ namespace Microsoft.Build.Framework
         /// MSBuild file where this task was defined.   
         /// </summary>
         public string TaskFile => taskFile;
+
+        /// <summary>
+        /// Line number of the task invocation in the project file
+        /// </summary>
+        public int LineNumber { get; internal set; }
+
+        /// <summary>
+        /// Column number of the task invocation in the project file
+        /// </summary>
+        public int ColumnNumber { get; internal set; }
 
         public override string Message
         {

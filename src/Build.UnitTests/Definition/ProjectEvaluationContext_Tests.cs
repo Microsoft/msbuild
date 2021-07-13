@@ -119,7 +119,7 @@ namespace Microsoft.Build.UnitTests.Definition
                         {Path.Combine(_env.DefaultTestDirectory.Path, "2.file"), 1}
                     }.OrderBy(kvp => kvp.Key));
 
-            fileSystem.DirectoryEntryExistsCalls.ShouldBe(2);
+            fileSystem.FileOrDirectoryExistsCalls.ShouldBe(2);
         }
 
         [Fact]

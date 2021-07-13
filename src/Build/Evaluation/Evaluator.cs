@@ -627,7 +627,7 @@ namespace Microsoft.Build.Evaluation
                 }
 
                 _data.InitialTargets = initialTargets;
-                MSBuildEventSource.Log.EvaluatePass1Stop(projectFile, _projectRootElement.Properties.Count, _projectRootElement.Imports.Count);
+                MSBuildEventSource.Log.EvaluatePass1Stop(projectFile);
                 // Pass2: evaluate item definitions
                 // Don't box via IEnumerator and foreach; cache count so not to evaluate via interface each iteration
                 MSBuildEventSource.Log.EvaluatePass2Start(projectFile);
@@ -641,7 +641,7 @@ namespace Microsoft.Build.Evaluation
                         }
                     }
                 }
-                MSBuildEventSource.Log.EvaluatePass2Stop(projectFile, _itemDefinitionGroupElements.Count);
+                MSBuildEventSource.Log.EvaluatePass2Stop(projectFile);
                 LazyItemEvaluator<P, I, M, D> lazyEvaluator = null;
                 using (_evaluationProfiler.TrackPass(EvaluationPass.Items))
                 {
@@ -684,7 +684,7 @@ namespace Microsoft.Build.Evaluation
                     lazyEvaluator = null;
                 }
 
-                MSBuildEventSource.Log.EvaluatePass3Stop(projectFile, _itemGroupElements.Count);
+                MSBuildEventSource.Log.EvaluatePass3Stop(projectFile);
 
                 // Pass4: evaluate using-tasks
                 MSBuildEventSource.Log.EvaluatePass4Start(projectFile);
@@ -696,7 +696,7 @@ namespace Microsoft.Build.Evaluation
                     }
                 }
 
-                // If there was no DefaultTargets attribute found in the depth first pass, 
+                // If there was no DefaultTargets attribute found in the depth first pass,
                 // use the name of the first target. If there isn't any target, don't error until build time.
 
                 if (_data.DefaultTargets == null)
@@ -714,7 +714,7 @@ namespace Microsoft.Build.Evaluation
                 Dictionary<string, List<TargetSpecification>> targetsWhichRunAfterByTarget = new Dictionary<string, List<TargetSpecification>>(StringComparer.OrdinalIgnoreCase);
                 LinkedList<ProjectTargetElement> activeTargetsByEvaluationOrder = new LinkedList<ProjectTargetElement>();
                 Dictionary<string, LinkedListNode<ProjectTargetElement>> activeTargets = new Dictionary<string, LinkedListNode<ProjectTargetElement>>(StringComparer.OrdinalIgnoreCase);
-                MSBuildEventSource.Log.EvaluatePass4Stop(projectFile, _usingTaskElements.Count);
+                MSBuildEventSource.Log.EvaluatePass4Stop(projectFile);
 
                 using (_evaluationProfiler.TrackPass(EvaluationPass.Targets))
                 {
@@ -748,7 +748,7 @@ namespace Microsoft.Build.Evaluation
 
                     if (Traits.Instance.EscapeHatches.DebugEvaluation)
                     {
-                        // This is so important for VS performance it's worth always tracing; accidentally having 
+                        // This is so important for VS performance it's worth always tracing; accidentally having
                         // inconsistent sets of global properties will cause reevaluations, which are wasteful and incorrect
                         if (_projectRootElement.Count > 0) // VB/C# will new up empty projects; they aren't worth recording
                         {
@@ -773,7 +773,7 @@ namespace Microsoft.Build.Evaluation
                     }
 
                     _data.FinishEvaluation();
-                    MSBuildEventSource.Log.EvaluatePass5Stop(projectFile, targetElementsCount);
+                    MSBuildEventSource.Log.EvaluatePass5Stop(projectFile);
                 }
             }
 
@@ -1002,7 +1002,7 @@ namespace Microsoft.Build.Evaluation
         /// </summary>
         private void ReadTargetElement(ProjectTargetElement targetElement, LinkedList<ProjectTargetElement> activeTargetsByEvaluationOrder, Dictionary<string, LinkedListNode<ProjectTargetElement>> activeTargets)
         {
-            // If we already have read a target instance for this element, use that. 
+            // If we already have read a target instance for this element, use that.
             ProjectTargetInstance targetInstance = targetElement.TargetInstance ?? ReadNewTargetElement(targetElement, _projectSupportsReturnsAttribute[(ProjectRootElement)targetElement.Parent], _evaluationProfiler);
 
             string targetName = targetElement.Name;
@@ -1196,9 +1196,9 @@ namespace Microsoft.Build.Evaluation
             }
             else
             {
-                // Make the subtoolset version itself available as a property -- but only if it's not already set. 
+                // Make the subtoolset version itself available as a property -- but only if it's not already set.
                 // Because some people may be depending on this value even if there isn't a matching sub-toolset,
-                // set the property even if there is no matching sub-toolset.  
+                // set the property even if there is no matching sub-toolset.
                 if (!_data.Properties.Contains(Constants.SubToolsetVersionPropertyName))
                 {
                     _data.SetProperty(Constants.SubToolsetVersionPropertyName, _data.SubToolsetVersion, false /* NOT global property */, false /* may NOT be a reserved name */);
@@ -1253,8 +1253,8 @@ namespace Microsoft.Build.Evaluation
             using (_evaluationProfiler.TrackElement(propertyElement))
             {
                 // Global properties cannot be overridden.  We silently ignore them if we try.  Legacy behavior.
-                // That is, unless this global property has been explicitly labeled as one that we want to treat as overridable for the duration 
-                // of this project (or import). 
+                // That is, unless this global property has been explicitly labeled as one that we want to treat as overridable for the duration
+                // of this project (or import).
                 if (
                         ((IDictionary<string, ProjectPropertyInstance>)_data.GlobalPropertiesDictionary).ContainsKey(propertyElement.Name) &&
                         !_data.GlobalPropertiesToTreatAsLocal.Contains(propertyElement.Name)
@@ -2282,8 +2282,8 @@ namespace Microsoft.Build.Evaluation
                         }
                     }
 
-                    // Because these expressions will never be expanded again, we 
-                    // can store the unescaped value. The only purpose of escaping is to 
+                    // Because these expressions will never be expanded again, we
+                    // can store the unescaped value. The only purpose of escaping is to
                     // avoid undesired splitting or expansion.
                     _importsSeen.Add(importFileUnescaped, importElement);
                 }

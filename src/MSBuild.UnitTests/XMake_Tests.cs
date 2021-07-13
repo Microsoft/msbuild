@@ -1937,7 +1937,7 @@ namespace Microsoft.Build.UnitTests
         {
             var loggers = new List<ILogger>();
             LoggerVerbosity verbosity = LoggerVerbosity.Normal;
-            List<DistributedLoggerRecord> distributedLoggerRecords = new List<DistributedLoggerRecord>(); 
+            List<DistributedLoggerRecord> distributedLoggerRecords = new List<DistributedLoggerRecord>();
             string[] consoleLoggerParameters = new string[6] { "Parameter1", ";Parameter;", "", ";", ";Parameter", "Parameter;" };
 
             MSBuildApp.ProcessConsoleLoggerSwitch
@@ -1991,7 +1991,7 @@ namespace Microsoft.Build.UnitTests
   <PropertyGroup>
     <RestoreFirstProps>{Guid.NewGuid():N}.props</RestoreFirstProps>
   </PropertyGroup>
-  
+
   <Import Project=""$(RestoreFirstProps)"" Condition=""Exists($(RestoreFirstProps))""/>
 
   <Target Name=""Build"">
@@ -2003,10 +2003,10 @@ namespace Microsoft.Build.UnitTests
     <ItemGroup>
       <Lines Include=""&lt;Project ToolsVersion=&quot;Current&quot; xmlns=&quot;http://schemas.microsoft.com/developer/msbuild/2003&quot;&gt;&lt;PropertyGroup&gt;&lt;PropertyA&gt;{guid}&lt;/PropertyA&gt;&lt;/PropertyGroup&gt;&lt;/Project&gt;"" />
     </ItemGroup>
-    
+
     <WriteLinesToFile File=""$(RestoreFirstProps)"" Lines=""@(Lines)"" Overwrite=""true"" />
   </Target>
-  
+
 </Project>");
 
             string logContents = ExecuteMSBuildExeExpectSuccess(projectContents, arguments: "/restore");
@@ -2026,7 +2026,7 @@ namespace Microsoft.Build.UnitTests
   <PropertyGroup>
     <RestoreFirstProps>{restoreFirstProps}</RestoreFirstProps>
   </PropertyGroup>
-  
+
   <Import Project=""$(RestoreFirstProps)"" Condition=""Exists($(RestoreFirstProps))""/>
 
   <Target Name=""Build"">
@@ -2039,10 +2039,10 @@ namespace Microsoft.Build.UnitTests
     <ItemGroup>
       <Lines Include=""&lt;Project ToolsVersion=&quot;Current&quot; xmlns=&quot;http://schemas.microsoft.com/developer/msbuild/2003&quot;&gt;&lt;PropertyGroup&gt;&lt;PropertyA&gt;{guid2}&lt;/PropertyA&gt;&lt;/PropertyGroup&gt;&lt;/Project&gt;"" />
     </ItemGroup>
-    
+
     <WriteLinesToFile File=""$(RestoreFirstProps)"" Lines=""@(Lines)"" Overwrite=""true"" />
   </Target>
-  
+
 </Project>");
 
             IDictionary<string, string> preExistingProps = new Dictionary<string, string>
@@ -2073,7 +2073,7 @@ namespace Microsoft.Build.UnitTests
   <PropertyGroup>
     <RestoreFirstProps>{restoreFirstProps}</RestoreFirstProps>
   </PropertyGroup>
-  
+
   <Import Project=""$(RestoreFirstProps)"" />
 
   <Target Name=""Build"">
@@ -2086,10 +2086,10 @@ namespace Microsoft.Build.UnitTests
     <ItemGroup>
       <Lines Include=""&lt;Project ToolsVersion=&quot;Current&quot; xmlns=&quot;http://schemas.microsoft.com/developer/msbuild/2003&quot;&gt;&lt;PropertyGroup&gt;&lt;PropertyA&gt;{guid2}&lt;/PropertyA&gt;&lt;/PropertyGroup&gt;&lt;/Project&gt;"" />
     </ItemGroup>
-    
+
     <WriteLinesToFile File=""$(RestoreFirstProps)"" Lines=""@(Lines)"" Overwrite=""true"" />
   </Target>
-  
+
 </Project>");
 
             IDictionary<string, string> preExistingProps = new Dictionary<string, string>
@@ -2211,7 +2211,7 @@ $@"<Project>
   <Target Name=""Build"">
     <Message Text=""MSBuildInteractive = [$(MSBuildInteractive)]"" />
   </Target>
-  
+
 </Project>");
 
             string logContents = ExecuteMSBuildExeExpectSuccess(projectContents, arguments: arguments);
@@ -2233,7 +2233,7 @@ $@"<Project>
 
                     <Target Name=""Build"">
                     </Target>
-  
+
                 </Project>"));
 
                 testEnvironment.CreateFile("TestProject.proj", @"
@@ -2269,7 +2269,7 @@ $@"<Project>
   <Target Name=""IssueWarning"">
     <Warning Text=""Warning!"" />
   </Target>
-  
+
 </Project>");
 
             TransientTestProjectWithFiles testProject = testEnvironment.CreateTestProjectWithFiles(projectContents);
@@ -2277,6 +2277,51 @@ $@"<Project>
             RunnerUtilities.ExecMSBuild($"\"{testProject.ProjectFile}\" -warnaserror", out bool success, _output);
 
             success.ShouldBeFalse();
+        }
+
+        [Trait("Category", "netcore-osx-failing")]
+        [Trait("Category", "netcore-linux-failing")]
+        [Fact]
+        public void BuildSlnOutOfProc()
+        {
+            using (TestEnvironment testEnvironment = UnitTests.TestEnvironment.Create())
+            {
+                string solutionFileContents =
+                    @"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+Project('{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}') = 'TestProject', 'TestProject.proj', '{6185CC21-BE89-448A-B3C0-D1C27112E595}'
+EndProject
+Global
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|Mixed Platforms = Debug|Mixed Platforms
+        Release|Any CPU = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+        {6185CC21-BE89-448A-B3C0-D1C27112E595}.Debug|Mixed Platforms.ActiveCfg = CSConfig1|Any CPU
+        {6185CC21-BE89-448A-B3C0-D1C27112E595}.Debug|Mixed Platforms.Build.0 = CSConfig1|Any CPU
+    EndGlobalSection
+EndGlobal
+                    ".Replace("'", "\"");
+
+                var testSolution = testEnvironment.CreateFile("TestSolution.sln", ObjectModelHelpers.CleanupFileContents(solutionFileContents));
+
+                string testMessage = "Hello from TestProject!";
+                testEnvironment.CreateFile("TestProject.proj", @$"
+                <Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+                  <Target Name=""Build"">
+                    <Message Text=""{testMessage}"" />
+                  </Target>
+                </Project>
+                ");
+
+                testEnvironment.SetEnvironmentVariable("MSBUILDNOINPROCNODE", "1");
+
+                string output = RunnerUtilities.ExecMSBuild($"\"{testSolution.Path}\" /p:Configuration=Debug", out var success, _output);
+
+                success.ShouldBeTrue(output);
+                output.ShouldContain(testMessage);
+            }
         }
 
 #if FEATURE_ASSEMBLYLOADCONTEXT

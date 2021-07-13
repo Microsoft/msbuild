@@ -230,7 +230,6 @@ namespace Microsoft.Build.Evaluation
                         // End of legal area for metadata expressions.
                         _expander.Metadata = null;
                     }
-
                     // End of pseudo batching
                     ////////////////////////////////////////////////////
                     // Start of old code
@@ -283,17 +282,18 @@ namespace Microsoft.Build.Evaluation
                 }
             }
 
-            protected bool NeedToExpandMetadataForEachItem(ImmutableList<ProjectMetadataElement> metadata, out ItemsAndMetadataPair itemsAndMetadataFound)
+            private static IEnumerable<string> GetMetadataValuesAndConditions(ImmutableList<ProjectMetadataElement> metadata)
             {
-                List<string> values = new List<string>(metadata.Count * 2);
-
                 foreach (var metadataElement in metadata)
                 {
-                    values.Add(metadataElement.Value);
-                    values.Add(metadataElement.Condition);
+                    yield return metadataElement.Value;
+                    yield return metadataElement.Condition;
                 }
+            }
 
-                itemsAndMetadataFound = ExpressionShredder.GetReferencedItemNamesAndMetadata(values);
+            protected bool NeedToExpandMetadataForEachItem(ImmutableList<ProjectMetadataElement> metadata, out ItemsAndMetadataPair itemsAndMetadataFound)
+            {
+                itemsAndMetadataFound = ExpressionShredder.GetReferencedItemNamesAndMetadata(GetMetadataValuesAndConditions(metadata));
 
                 bool needToExpandMetadataForEachItem = false;
 

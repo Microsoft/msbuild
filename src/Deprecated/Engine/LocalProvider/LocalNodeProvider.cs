@@ -59,7 +59,7 @@ namespace Microsoft.Build.BuildEngine
             }
 
             /* If we dont get a path passed in as a parameter, we can only assume that our path
-             is in the current appdomain basedirectory, this is the base directory 
+             is in the current appdomain basedirectory, this is the base directory
               that the assembly resolver uses to probe for assemblies
            */
             if (string.IsNullOrEmpty(this.locationOfMSBuildExe))
@@ -90,7 +90,7 @@ namespace Microsoft.Build.BuildEngine
                 lastUsedNodeNumber = nodeData[i].NodeNumber + 1;
             }
 
-            // Set up the callback 
+            // Set up the callback
             this.engineCallback = parentEngineCallback;
             this.parentGlobalProperties = parentGlobalPropertyGroup;
             this.toolsetSearchLocations = toolSetSearchLocations;
@@ -228,7 +228,7 @@ namespace Microsoft.Build.BuildEngine
             if (nodeData[nodeIndex].NodeState != NodeState.Launched)
             {
                 // Note that we have to check the node status again inside the mutex. This
-                // ensures that that after flipping the status to launched inside the mutex 
+                // ensures that that after flipping the status to launched inside the mutex
                 // there will be no more writes to the queue of targets waiting to be sent
                 lock (nodeStateLock)
                 {
@@ -319,7 +319,7 @@ namespace Microsoft.Build.BuildEngine
                 }
             }
 
-            // Reset the shutdown response received properties incase the nodes are going 
+            // Reset the shutdown response received properties incase the nodes are going
             // to be used for another build on the same engine.
             foreach (LocalNodeInfo nodeInfo in nodeData)
             {
@@ -459,7 +459,7 @@ namespace Microsoft.Build.BuildEngine
             }
             catch (System.ComponentModel.Win32Exception)
             {
-                // The exception indicates that the child process is no longer running or 
+                // The exception indicates that the child process is no longer running or
                 // the parent cannot access the child process information due to insufficent security permissions
             }
         }
@@ -697,7 +697,7 @@ namespace Microsoft.Build.BuildEngine
                         nodeInUseEvent.Close();
 
                         // If the node is still active and has not replied to the initialization message it must
-                        // be in bad state - try to get that node to exit 
+                        // be in bad state - try to get that node to exit
                         if (!nodeConnected && checkIfNodeActive(nodeData[nodeIndex].NodeNumber))
                         {
                             EventWaitHandle nodeShutdownEvent = new EventWaitHandle(false, EventResetMode.ManualReset, LocalNodeProviderGlobalNames.NodeErrorShutdownEventName(nodeData[nodeIndex].NodeNumber));
@@ -738,7 +738,7 @@ namespace Microsoft.Build.BuildEngine
             }
             catch (WaitHandleCannotBeOpenedException)
             {
-                // Assume that the node is not running 
+                // Assume that the node is not running
             }
             finally
             {

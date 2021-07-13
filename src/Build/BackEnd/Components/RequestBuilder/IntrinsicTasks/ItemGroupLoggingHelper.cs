@@ -252,7 +252,8 @@ namespace Microsoft.Build.BackEnd
             TaskParameterMessageKind messageKind,
             string itemType,
             IList items,
-            bool logItemMetadata)
+            bool logItemMetadata,
+            IElementLocation location = null)
         {
             var args = CreateTaskParameterEventArgs(
                 loggingContext.BuildEventContext,
@@ -260,7 +261,10 @@ namespace Microsoft.Build.BackEnd
                 itemType,
                 items,
                 logItemMetadata,
-                DateTime.UtcNow);
+                DateTime.UtcNow,
+                location?.Line ?? 0,
+                location?.Column ?? 0);
+
             loggingContext.LogBuildEvent(args);
         }
 
@@ -270,7 +274,9 @@ namespace Microsoft.Build.BackEnd
             string itemType,
             IList items,
             bool logItemMetadata,
-            DateTime timestamp)
+            DateTime timestamp,
+            int line = 0,
+            int column = 0)
         {
             // Only create a snapshot of items if we use AppDomains
 #if FEATURE_APPDOMAIN
@@ -284,6 +290,8 @@ namespace Microsoft.Build.BackEnd
                 logItemMetadata,
                 timestamp);
             args.BuildEventContext = buildEventContext;
+            args.LineNumber = line;
+            args.ColumnNumber = column;
             return args;
         }
 

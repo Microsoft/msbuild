@@ -612,38 +612,36 @@ namespace Microsoft.Build.Evaluation
             }
         }
 
+        private static IEnumerable<string> GetExpandedMetadataValuesAndConditions(ICollection<ProjectMetadataElement> metadata, Expander<P, I> expander)
+        {
+            // Since we're just attempting to expand properties in order to find referenced items and not expanding metadata,
+            // unexpected errors may occur when evaluating property functions on unexpanded metadata. Just ignore them if that happens.
+            // See: https://github.com/Microsoft/msbuild/issues/3460
+            const ExpanderOptions expanderOptions = ExpanderOptions.ExpandProperties | ExpanderOptions.LeavePropertiesUnexpandedOnError;
+
+            // Expand properties here, because a property may have a value which is an item reference (ie "@(Bar)"), and
+            // if so we need to add the right item reference.
+            foreach (var metadatumElement in metadata)
+            {
+                yield return expander.ExpandIntoStringLeaveEscaped(
+                    metadatumElement.Value,
+                    expanderOptions,
+                    metadatumElement.Location);
+
+                yield return expander.ExpandIntoStringLeaveEscaped(
+                    metadatumElement.Condition,
+                    expanderOptions,
+                    metadatumElement.ConditionLocation);
+            }
+        }
+
         private void ProcessMetadataElements(ProjectItemElement itemElement, OperationBuilderWithMetadata operationBuilder)
         {
             if (itemElement.HasMetadata)
             {
                 operationBuilder.Metadata.AddRange(itemElement.Metadata);
 
-                var values = new List<string>(itemElement.Metadata.Count * 2);
-
-                // Expand properties here, because a property may have a value which is an item reference (ie "@(Bar)"), and
-                // if so we need to add the right item reference.
-                foreach (var metadatumElement in itemElement.Metadata)
-                {
-                    // Since we're just attempting to expand properties in order to find referenced items and not expanding metadata,
-                    // unexpected errors may occur when evaluating property functions on unexpanded metadata. Just ignore them if that happens.
-                    // See: https://github.com/Microsoft/msbuild/issues/3460
-                    const ExpanderOptions expanderOptions = ExpanderOptions.ExpandProperties | ExpanderOptions.LeavePropertiesUnexpandedOnError;
-
-                    var valueWithPropertiesExpanded = _expander.ExpandIntoStringLeaveEscaped(
-                        metadatumElement.Value,
-                        expanderOptions,
-                        metadatumElement.Location);
-
-                    var conditionWithPropertiesExpanded = _expander.ExpandIntoStringLeaveEscaped(
-                        metadatumElement.Condition,
-                        expanderOptions,
-                        metadatumElement.ConditionLocation);
-
-                    values.Add(valueWithPropertiesExpanded);
-                    values.Add(conditionWithPropertiesExpanded);
-                }
-
-                var itemsAndMetadataFound = ExpressionShredder.GetReferencedItemNamesAndMetadata(values);
+                var itemsAndMetadataFound = ExpressionShredder.GetReferencedItemNamesAndMetadata(GetExpandedMetadataValuesAndConditions(itemElement.Metadata, _expander));
                 if (itemsAndMetadataFound.Items != null)
                 {
                     foreach (var itemType in itemsAndMetadataFound.Items)

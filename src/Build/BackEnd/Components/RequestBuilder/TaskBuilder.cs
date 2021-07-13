@@ -847,7 +847,9 @@ namespace Microsoft.Build.BackEnd
                     }
                     else if (type == typeof(ThreadAbortException))
                     {
+#if !NET6_0_OR_GREATER
                         Thread.ResetAbort();
+#endif
                         _continueOnError = ContinueOnError.ErrorAndStop;
 
                         // Cannot rethrow wrapped as ThreadAbortException is sealed and has no appropriate constructor

@@ -135,7 +135,12 @@ namespace Microsoft.Build.BackEnd.Logging
                 properties,
                 items,
                 evaluationId);
-            LoggingService.LogComment(this.BuildEventContext, MessageImportance.Low, "ToolsVersionInEffectForBuild", toolsVersion);
+
+            // No need to log a redundant message in the common case
+            if (toolsVersion != "Current")
+            {
+                LoggingService.LogComment(this.BuildEventContext, MessageImportance.Low, "ToolsVersionInEffectForBuild", toolsVersion);
+            }
 
             this.IsValid = true;
         }

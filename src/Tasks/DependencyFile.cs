@@ -12,20 +12,19 @@ namespace Microsoft.Build.Tasks
     /// <remarks>
     /// Represents a single input to a compilation-style task.
     /// Keeps track of timestamp for later comparison.
-    /// 
-    /// On-disk serialization format, don't change field names or types or use readonly.
     /// </remarks>
+    /// Serializable should be included in all state files. It permits BinaryFormatter-based calls, including from GenerateResource, which we cannot move off BinaryFormatter.
     [Serializable]
     internal class DependencyFile
     {
         // Filename
-        private string filename;
+        internal string filename;
 
         // Date and time the file was last modified           
-        private DateTime lastModified;
+        internal DateTime lastModified;
 
         // Whether the file exists or not.
-        private bool exists = false;
+        internal bool exists = false;
 
         /// <summary>
         /// The name of the file.
@@ -68,6 +67,10 @@ namespace Microsoft.Build.Tasks
             {
                 exists = false;
             }
+        }
+
+        internal DependencyFile()
+        {
         }
 
         /// <summary>

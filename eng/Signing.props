@@ -1,5 +1,9 @@
 <Project>
-    <ItemGroup>
-		<ItemsToSign Include="$(VisualStudioSetupInsertionPath)Microsoft.Build.UnGAC.exe" />
-	</ItemGroup>
+  <ItemGroup>
+    <ItemsToSign Include="$(VisualStudioSetupInsertionPath)Microsoft.Build.UnGAC.exe" />
+  </ItemGroup>
+    
+  <PropertyGroup>
+    <UseDotNetCertificate>true</UseDotNetCertificate>
+  </PropertyGroup>
 </Project>

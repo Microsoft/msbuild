@@ -65,7 +65,7 @@ namespace Microsoft.Build.Evaluation
         /// where metadata key is like "itemname.metadataname" or "metadataname".
         /// PERF: Tables are null if there are no entries, because this is quite a common case.
         /// </summary>
-        internal static ItemsAndMetadataPair GetReferencedItemNamesAndMetadata(List<string> expressions)
+        internal static ItemsAndMetadataPair GetReferencedItemNamesAndMetadata(IEnumerable<string> expressions)
         {
             ItemsAndMetadataPair pair = new ItemsAndMetadataPair(null, null);
 

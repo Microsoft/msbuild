@@ -14,6 +14,9 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Tasks;
 using Xunit;
 using Microsoft.Build.Shared;
+using System.IO;
+using Microsoft.Build.BackEnd;
+using Shouldly;
 
 namespace Microsoft.Build.UnitTests
 {
@@ -55,6 +58,29 @@ namespace Microsoft.Build.UnitTests
         {
             var task = new ResolveComReference();
             Assert.NotNull(task.GetResolvedAssemblyReferenceItemSpecs());
+        }
+
+        [Fact]
+        public void TestSerializationAndDeserialization()
+        {
+            ResolveComReferenceCache cache = new("path1", "path2");
+            cache.componentTimestamps = new()
+            {
+                { "first", DateTime.Now },
+                { "second", DateTime.FromBinary(10000) },
+            };
+            ResolveComReferenceCache cache2 = null;
+            using (TestEnvironment env = TestEnvironment.Create())
+            {
+                TransientTestFile file = env.CreateFile();
+                cache.SerializeCache(file.Path, null);
+                cache2 = StateFileBase.DeserializeCache(file.Path, null, typeof(ResolveComReferenceCache)) as ResolveComReferenceCache;
+            }
+
+            cache2.tlbImpLocation.ShouldBe(cache.tlbImpLocation);
+            cache2.axImpLocation.ShouldBe(cache.axImpLocation);
+            cache2.componentTimestamps.Count.ShouldBe(cache.componentTimestamps.Count);
+            cache2.componentTimestamps["second"].ShouldBe(cache.componentTimestamps["second"]);
         }
 
         /*

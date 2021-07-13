@@ -2,7 +2,7 @@
 name: 🐞 Bug Report
 about: Report a bug to help us improve MSBuild.
 title: ''
-labels: bug, untriaged
+labels: bug, needs-triage
 ---
 
 <!-- This is a template that helps us provide quicker feedback. Please use any relevant sections and delete anything you don't need. -->

@@ -62,7 +62,7 @@ namespace Microsoft.Build.BackEnd
     ///    that by ensuring a single Translate method on a given object can handle both reads and
     ///    writes without referencing any field more than once.
     /// </remarks>
-    internal interface ITranslator
+    internal interface ITranslator : IDisposable
     {
         /// <summary>
         /// Returns the current serialization mode.
@@ -300,6 +300,8 @@ namespace Microsoft.Build.BackEnd
         void TranslateDictionary(ref Dictionary<string, string> dictionary, IEqualityComparer<string> comparer);
 
         void TranslateDictionary(ref IDictionary<string, string> dictionary, NodePacketCollectionCreator<IDictionary<string, string>> collectionCreator);
+
+        void TranslateDictionary(ref Dictionary<string, DateTime> dictionary, StringComparer comparer);
 
         void TranslateDictionary<K, V>(ref IDictionary<K, V> dictionary, ObjectTranslator<K> keyTranslator, ObjectTranslator<V> valueTranslator, NodePacketCollectionCreator<IDictionary<K, V>> dictionaryCreator);
 

@@ -91,7 +91,7 @@ namespace Microsoft.Build.Evaluation.Context
         {
             var context = new EvaluationContext(
                 policy,
-                fileSystem == null ? null : new MSBuildFileSystemAdapter(fileSystem));
+                fileSystem);
 
             TestOnlyHookOnCreate?.Invoke(context);
 

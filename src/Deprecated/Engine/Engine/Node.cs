@@ -435,7 +435,7 @@ namespace Microsoft.Build.BuildEngine
                 }
                 catch (Exception ex)
                 {
-                    // If an error occurred while trying to send the original exception to the parent 
+                    // If an error occurred while trying to send the original exception to the parent
                     // rethrow the original exception
                     string message = ResourceUtilities.FormatResourceString("FatalErrorOnChildNode", nodeId, ex.Message);
 
@@ -630,7 +630,7 @@ namespace Microsoft.Build.BuildEngine
         private ManualResetEvent exitNodeEvent;
         // The engine being used to process build requests
         private Engine localEngine;
-        // The queue of build requests arriving from the parent. The queue is needed to buffer the requests while the local engine is 
+        // The queue of build requests arriving from the parent. The queue is needed to buffer the requests while the local engine is
         // being created and initialized
         private Queue<BuildRequest> buildRequests;
         // This flag is true if the thread that will be running the Engine.BuildLoop has been launched

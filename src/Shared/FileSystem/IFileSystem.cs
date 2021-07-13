@@ -42,6 +42,6 @@ namespace Microsoft.Build.Shared.FileSystem
 
         bool FileExists(string path);
 
-        bool DirectoryEntryExists(string path);
+        bool FileOrDirectoryExists(string path);
     }
 }

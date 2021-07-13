@@ -1,0 +1,14 @@
+<Project>
+
+  <PropertyGroup>
+    <GitHubRepositoryName>msbuild</GitHubRepositoryName>
+    <SourceBuildManagedOnly>true</SourceBuildManagedOnly>
+  </PropertyGroup>
+
+  <Target Name="ConfigureInnerBuildArgs" BeforeTargets="GetSourceBuildCommandConfiguration">
+    <PropertyGroup>
+      <InnerBuildArgs>$(InnerBuildArgs) /p:Projects="$(InnerSourceBuildRepoRoot)\MSBuild.SourceBuild.slnf"</InnerBuildArgs>
+    </PropertyGroup>
+  </Target>
+
+</Project>

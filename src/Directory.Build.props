@@ -32,7 +32,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
 
     <!-- Target frameworks for Exe and unit test projects (ie projects with runtime output) -->
-    <RuntimeOutputTargetFrameworks>net5.0</RuntimeOutputTargetFrameworks>
+    <RuntimeOutputTargetFrameworks>net6.0</RuntimeOutputTargetFrameworks>
     <RuntimeOutputTargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) and '$(DotNetBuildFromSource)' != 'true'">$(FullFrameworkTFM);$(RuntimeOutputTargetFrameworks)</RuntimeOutputTargetFrameworks>
     <RuntimeOutputTargetFrameworks Condition="'$(MonoBuild)' == 'true'">$(FullFrameworkTFM)</RuntimeOutputTargetFrameworks>
 

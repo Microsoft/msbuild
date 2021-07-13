@@ -69,7 +69,9 @@ namespace Microsoft.Build.BackEnd.Logging
                 targetLoggingContext.BuildEventContext,
                 _taskName,
                 projectFullPath,
-                task.Location.File
+                task.Location.File,
+                task.Location.Line,
+                task.Location.Column
                 );
             this.IsValid = true;
         }

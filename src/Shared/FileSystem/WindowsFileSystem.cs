@@ -59,7 +59,7 @@ namespace Microsoft.Build.Shared.FileSystem
             return NativeMethodsShared.FileExistsWindows(path);
         }
 
-        public override bool DirectoryEntryExists(string path)
+        public override bool FileOrDirectoryExists(string path)
         {
             return NativeMethodsShared.FileOrDirectoryExistsWindows(path);
         }

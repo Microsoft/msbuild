@@ -854,19 +854,20 @@ namespace Microsoft.Build.Tasks.Deployment.ManifestUtilities
 
         private static string GetVersionIndependentToolPath(string toolName)
         {
-            RegistryKey localMachineKey = Registry.LocalMachine;
             const string versionIndependentToolKeyName = @"Software\Microsoft\ClickOnce\SignTool";
-
-            using (RegistryKey versionIndependentToolKey = localMachineKey.OpenSubKey(versionIndependentToolKeyName, writable: false))
+            using (RegistryKey localMachineKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
             {
-                string versionIndependentToolPath = null;
-
-                if (versionIndependentToolKey != null)
+                using (RegistryKey versionIndependentToolKey = localMachineKey.OpenSubKey(versionIndependentToolKeyName, writable: false))
                 {
-                    versionIndependentToolPath = versionIndependentToolKey.GetValue("Path") as string;
-                }
+                    string versionIndependentToolPath = null;
 
-                return versionIndependentToolPath != null ? Path.Combine(versionIndependentToolPath, toolName) : null;
+                    if (versionIndependentToolKey != null)
+                    {
+                        versionIndependentToolPath = versionIndependentToolKey.GetValue("Path") as string;
+                    }
+
+                    return versionIndependentToolPath != null ? Path.Combine(versionIndependentToolPath, toolName) : null;
+                }
             }
         }
     }

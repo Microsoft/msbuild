@@ -498,6 +498,14 @@ namespace Microsoft.Build.UnitTests.BackEnd
             Assert.Equal(2, response[1].NumberOfNodesToCreate);
         }
 
+        [Fact]
+        public void SchedulerShouldHonorDisableInprocNode()
+        {
+            var s = new Scheduler();
+            s.InitializeComponent(new MockHost(new BuildParameters {DisableInProcNode = true}));
+            s.ForceAffinityOutOfProc.ShouldBeTrue();
+        }
+
         /// <summary>
         /// Make sure that traversal projects are marked with an affinity of "InProc", which means that
         /// even if multiple are available, we should still only have the single inproc node.

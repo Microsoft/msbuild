@@ -12,7 +12,7 @@ Set-StrictMode -Version "Latest"
 $ErrorActionPreference = "Stop"
 
 function Copy-WithBackup ($origin) {
-    $directoryPart = Join-Path -Path $destination $origin.IntermediaryDirectories 
+    $directoryPart = Join-Path -Path $destination $origin.IntermediaryDirectories
     $destinationPath = Join-Path -Path $directoryPart (Split-Path $origin.SourceFile -leaf)
 
     if (Test-Path $destinationPath -PathType Leaf) {
@@ -48,7 +48,7 @@ Write-Host "Existing MSBuild assemblies backed up to $BackupFolder"
 if ($runtime -eq "Desktop") {
     $targetFramework = "net472"
 } else {
-    $targetFramework = "net5.0"
+    $targetFramework = "net6.0"
 }
 
 $bootstrapBinDirectory = "artifacts\bin\MSBuild.Bootstrap\$configuration\$targetFramework"
@@ -59,6 +59,19 @@ $filesToCopyToBin = @(
     FileToCopy "$bootstrapBinDirectory\Microsoft.Build.Tasks.Core.dll"
     FileToCopy "$bootstrapBinDirectory\Microsoft.Build.Utilities.Core.dll"
     FileToCopy "$bootstrapBinDirectory\Microsoft.NET.StringTools.dll"
+
+    FileToCopy "$bootstrapBinDirectory\Microsoft.Bcl.AsyncInterfaces.dll"
+    FileToCopy "$bootstrapBinDirectory\System.Buffers.dll"
+    FileToCopy "$bootstrapBinDirectory\System.Collections.Immutable.dll"
+    FileToCopy "$bootstrapBinDirectory\System.Memory.dll"
+    FileToCopy "$bootstrapBinDirectory\System.Numerics.Vectors.dll"
+    FileToCopy "$bootstrapBinDirectory\System.Resources.Extensions.dll"
+    FileToCopy "$bootstrapBinDirectory\System.Runtime.CompilerServices.Unsafe.dll"
+    FileToCopy "$bootstrapBinDirectory\System.Text.Encodings.Web.dll"
+    FileToCopy "$bootstrapBinDirectory\System.Text.Json.dll"
+    FileToCopy "$bootstrapBinDirectory\System.Threading.Tasks.Dataflow.dll"
+    FileToCopy "$bootstrapBinDirectory\System.Threading.Tasks.Extensions.dll"
+    FileToCopy "$bootstrapBinDirectory\System.ValueTuple.dll"
 
     FileToCopy "$bootstrapBinDirectory\en\Microsoft.Build.resources.dll" "en"
     FileToCopy "$bootstrapBinDirectory\en\Microsoft.Build.Tasks.Core.resources.dll" "en"
@@ -87,6 +100,7 @@ $filesToCopyToBin = @(
 if ($runtime -eq "Desktop") {
     $runtimeSpecificFiles = @(
         FileToCopy "$bootstrapBinDirectory\MSBuild.exe"
+        FileToCopy "$bootstrapBinDirectory\MSBuild.exe.config"
         FileToCopy "artifacts\bin\Microsoft.Build.Conversion\$configuration\$targetFramework\Microsoft.Build.Conversion.Core.dll"
         FileToCopy "artifacts\bin\Microsoft.Build.Engine\$configuration\$targetFramework\Microsoft.Build.Engine.dll"
 

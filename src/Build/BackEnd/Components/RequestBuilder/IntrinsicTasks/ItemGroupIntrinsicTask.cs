@@ -218,7 +218,8 @@ namespace Microsoft.Build.BackEnd
                     TaskParameterMessageKind.AddItem,
                     child.ItemType,
                     itemsToAdd,
-                    logItemMetadata: true);
+                    logItemMetadata: true,
+                    child.Location);
             }
 
             // Now add the items we created to the lookup.
@@ -261,7 +262,8 @@ namespace Microsoft.Build.BackEnd
                         TaskParameterMessageKind.RemoveItem,
                         child.ItemType,
                         itemsToRemove,
-                        logItemMetadata: true);
+                        logItemMetadata: true,
+                        child.Location);
                 }
 
                 bucket.Lookup.RemoveItems(itemsToRemove);

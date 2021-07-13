@@ -573,7 +573,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <AssemblyFoldersSuffix Condition=" '$(AssemblyFoldersSuffix)' == '' ">AssemblyFoldersEx</AssemblyFoldersSuffix>
     <FrameworkRegistryBase Condition=" '$(FrameworkRegistryBase)' == '' ">Software\Microsoft\$(TargetFrameworkIdentifier)</FrameworkRegistryBase>
     <TargetPlatformRegistryBase Condition="'$(TargetPlatformRegistryBase)' == ''">Software\Microsoft\Microsoft SDKs\$(TargetPlatformIdentifier)</TargetPlatformRegistryBase>
-    <AssemblyFoldersConfigFile Condition="'$(AssemblyFoldersConfigFile)' == ''">$(MSBuildToolsPath32)\AssemblyFolders.config</AssemblyFoldersConfigFile>
+    <AssemblyFoldersConfigFile Condition="'$(AssemblyFoldersConfigFile)' == ''">$([MSBuild]::GetToolsDirectory32())\AssemblyFolders.config</AssemblyFoldersConfigFile>
     <AssemblyFoldersConfigFileSearchPath Condition="Exists('$(AssemblyFoldersConfigFile)')">{AssemblyFoldersFromConfig:$(AssemblyFoldersConfigFile),$(TargetFrameworkVersion)};</AssemblyFoldersConfigFileSearchPath>
     <!--
         The SearchPaths property is set to find assemblies in the following order:
@@ -4233,6 +4233,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <ItemGroup Condition="'$(PublishSingleFile)' == 'true'">
       <_ClickOnceFiles Include="$(PublishedSingleFilePath)"/>
       <_ClickOnceFiles Include="@(_FilesExcludedFromBundle)"/>
+
+      <!-- Include file association icons from Content as loose files -->
+      <_FileAssociationIcons Include="%(FileAssociation.DefaultIcon)"/>
+      <_ClickOnceFiles Include="@(ContentWithTargetPath)" Condition="'%(Identity)'=='@(_FileAssociationIcons)'"/>
     </ItemGroup>
 
     <!-- For single file publish in .net core app, sign the SF EXE if signing is enabled -->
@@ -4736,9 +4740,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       GetCopyToOutputDirectoryItems depends on an unspecified dependency _SplitProjectReferencesByFileExistence -> AssignProjectConfiguration (https://github.com/microsoft/msbuild/issues/4677).
       When the unspecified dependency does not happen by accident, content copying is only 1 level deep instead of transitive.
       This target enforces the dependency.
-
-      TODO: make transitive content copying the default when the breaking change is acceptable.
     -->
+
+    <MSBuildCopyContentTransitively Condition=" '$(MSBuildCopyContentTransitively)' == '' and $([MSBuild]::AreFeaturesEnabled('17.0'))">true</MSBuildCopyContentTransitively>
+
     <_TargetsThatPrepareProjectReferences Condition=" '$(MSBuildCopyContentTransitively)' == 'true' ">
       AssignProjectConfiguration;
       _SplitProjectReferencesByFileExistence
@@ -6525,7 +6530,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- Import NuGet.targets (required for GetReferenceNearestTargetFrameworkTask and used for Restore functionality) -->
   <PropertyGroup>
     <MSBuildUseVisualStudioDirectoryLayout Condition="'$(MSBuildUseVisualStudioDirectoryLayout)'==''">$([MSBuild]::IsRunningFromVisualStudio())</MSBuildUseVisualStudioDirectoryLayout>
-    <NuGetRestoreTargets Condition="'$(NuGetRestoreTargets)'=='' and '$(MSBuildUseVisualStudioDirectoryLayout)'=='true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</NuGetRestoreTargets>
+    <NuGetRestoreTargets Condition="'$(NuGetRestoreTargets)'=='' and '$(MSBuildUseVisualStudioDirectoryLayout)'=='true'">$([MSBuild]::GetToolsDirectory32())\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</NuGetRestoreTargets>
     <NuGetRestoreTargets Condition="'$(NuGetRestoreTargets)'==''">$(MSBuildToolsPath)\NuGet.targets</NuGetRestoreTargets>
   </PropertyGroup>
 

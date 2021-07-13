@@ -462,7 +462,7 @@ namespace Microsoft.Build.Evaluation
     /// on multiple metadata. If one item specifies NotTargetFramework to be net46 and TargetFramework to
     /// be netcoreapp3.1, we wouldn't want to match that to an item with TargetFramework 46 and
     /// NotTargetFramework netcoreapp3.1.
-    /// 
+    ///
     /// Implementing this as a list of sets where each metadatum key has its own set also would not work
     /// because different items could match on different metadata, and we want to check to see if any
     /// single item matches on all the metadata. As an example, consider this scenario:
@@ -474,10 +474,10 @@ namespace Microsoft.Build.Evaluation
     /// should match none of them because Forgind doesn't match all three metadata of any of the items.
     /// With a list of sets, Forgind would match Baby on BadAt, Child on GoodAt, and Adolescent on OkAt,
     /// and Forgind would be erroneously removed.
-    /// 
+    ///
     /// With a Trie as below, Items specify paths in the tree, so going to any child node eliminates all
     /// items that don't share that metadatum. This ensures the match is proper.
-    /// 
+    ///
     /// Todo: Tries naturally can have different shapes depending on in what order the metadata are considered.
     /// Specifically, if all the items share a single metadata value for the one metadatum and have different
     /// values for a second metadatum, it will have only one node more than the number of items if the first

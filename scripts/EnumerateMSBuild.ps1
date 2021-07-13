@@ -33,7 +33,7 @@ foreach ($instance in $vsInstances)
     $instancePath = $instance.installationPath
     Write-Log "********************" -LogToConsole $False
     Write-Log "Found VS Instance: $instanceName"
-    
+
     # Look at each dll/exe in the MSBuild bin folder and get their ProductVersion
     ls -File -Recurse -Include ('*.dll', '*.exe') -Path "$instancePath\MSBuild\15.0\Bin" | % VersionInfo | Format-Table -AutoSize InternalName, ProductVersion, FileName | Out-File $logFile -Width 1000 -Append unicode
     ls -File -Recurse -Include ('*.dll', '*.exe') -Path "$instancePath\MSBuild\Current\Bin" | % VersionInfo | Format-Table -AutoSize InternalName, ProductVersion, FileName | Out-File $logFile -Width 1000 -Append unicode

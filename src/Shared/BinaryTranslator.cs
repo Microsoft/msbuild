@@ -65,6 +65,14 @@ namespace Microsoft.Build.BackEnd
             }
 
             /// <summary>
+            /// Delegates the Dispose call the to the underlying BinaryReader.
+            /// </summary>
+            public void Dispose()
+            {
+                _reader.Close();
+            }
+
+            /// <summary>
             /// Gets the reader, if any.
             /// </summary>
             public BinaryReader Reader
@@ -660,12 +668,31 @@ namespace Microsoft.Build.BackEnd
                 }
             }
 
-            /// <summary>
-            /// Reads in the boolean which says if this object is null or not.
-            /// </summary>
-            /// <typeparam name="T">The type of object to test.</typeparam>
-            /// <returns>True if the object should be read, false otherwise.</returns>
-            public bool TranslateNullable<T>(T value)
+            public void TranslateDictionary(ref Dictionary<string, DateTime> dictionary, StringComparer comparer)
+            {
+                if (!TranslateNullable(dictionary))
+                {
+                    return;
+                }
+
+                int count = _reader.ReadInt32();
+                dictionary = new(count, comparer);
+                string key = string.Empty;
+                DateTime val = DateTime.MinValue;
+                for (int i = 0; i < count; i++)
+                {
+                    Translate(ref key);
+                    Translate(ref val);
+                    dictionary.Add(key, val);
+                }
+            }
+
+        /// <summary>
+        /// Reads in the boolean which says if this object is null or not.
+        /// </summary>
+        /// <typeparam name="T">The type of object to test.</typeparam>
+        /// <returns>True if the object should be read, false otherwise.</returns>
+        public bool TranslateNullable<T>(T value)
             {
                 bool haveRef = _reader.ReadBoolean();
                 return haveRef;
@@ -695,6 +722,14 @@ namespace Microsoft.Build.BackEnd
             {
                 _packetStream = packetStream;
                 _writer = new BinaryWriter(packetStream);
+            }
+
+            /// <summary>
+            /// Delegates the Dispose call the to the underlying BinaryWriter.
+            /// </summary>
+            public void Dispose()
+            {
+                _writer.Close();
             }
 
             /// <summary>
@@ -1251,6 +1286,29 @@ namespace Microsoft.Build.BackEnd
                     Translate(ref key);
                     T value = pair.Value;
                     objectTranslator(this, ref value);
+                }
+            }
+
+            /// <summary>
+            /// Translates a dictionary of { string, DateTime }.
+            /// </summary>
+            /// <param name="dictionary">The dictionary to be translated.</param>
+            /// <param name="comparer">Key comparer</param>
+            public void TranslateDictionary(ref Dictionary<string, DateTime> dictionary, StringComparer comparer)
+            {
+                if (!TranslateNullable(dictionary))
+                {
+                    return;
+                }
+
+                int count = dictionary.Count;
+                _writer.Write(count);
+                foreach (KeyValuePair<string, DateTime> kvp in dictionary)
+                {
+                    string key = kvp.Key;
+                    DateTime val = kvp.Value;
+                    Translate(ref key);
+                    Translate(ref val);
                 }
             }
 

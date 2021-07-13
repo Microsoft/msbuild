@@ -2853,7 +2853,7 @@ namespace Microsoft.Build.UnitTests
 
         private static IEnumerable<TargetDotNetFrameworkVersion> EnumDotNetFrameworkVersions()
         {
-            for (TargetDotNetFrameworkVersion dotNetVersion = TargetDotNetFrameworkVersion.Version11; dotNetVersion <= TargetDotNetFrameworkVersion.Latest; ++dotNetVersion)
+            for (TargetDotNetFrameworkVersion dotNetVersion = TargetDotNetFrameworkVersion.Version11; dotNetVersion <= TargetDotNetFrameworkVersion.VersionLatest; ++dotNetVersion)
             {
                 yield return dotNetVersion;
             }

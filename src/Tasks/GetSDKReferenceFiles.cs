@@ -9,9 +9,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Build.BackEnd;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Shared.FileSystem;
@@ -877,7 +877,7 @@ namespace Microsoft.Build.Tasks
         /// <summary>
         /// Methods which are used to save and read the cache files per sdk from and to disk.
         /// </summary>
-        private class SDKFilesCache
+        internal class SDKFilesCache
         {
             /// <summary>
             ///  Thread-safe queue which contains exceptions throws during cache file reading and writing.
@@ -927,16 +927,15 @@ namespace Microsoft.Build.Tasks
                 {
                     if (!string.IsNullOrEmpty(cacheFile))
                     {
-                        return SDKInfo.Deserialize(cacheFile);
+                        using FileStream fs = new FileStream(cacheFile, FileMode.Open);
+                        using var translator = BinaryTranslator.GetReadTranslator(fs, buffer: null);
+                        SDKInfo sdkInfo = new SDKInfo();
+                        sdkInfo.Translate(translator);
+                        return sdkInfo;
                     }
                 }
-                catch (Exception e)
+                catch (Exception e) when (!ExceptionHandling.IsCriticalException(e))
                 {
-                    if (ExceptionHandling.IsCriticalException(e))
-                    {
-                        throw;
-                    }
-
                     // Queue up for later logging, does not matter if the file is deleted or not
                     _exceptionMessages.Enqueue(ResourceUtilities.FormatResourceStringStripCodeAndKeyword("GetSDKReferenceFiles.ProblemReadingCacheFile", cacheFile, e.ToString()));
                 }
@@ -965,31 +964,21 @@ namespace Microsoft.Build.Tasks
                         {
                             File.Delete(existingCacheFile);
                         }
-                        catch (Exception e)
+                        catch (Exception e) when (!ExceptionHandling.IsCriticalException(e))
                         {
-                            if (ExceptionHandling.IsCriticalException(e))
-                            {
-                                throw;
-                            }
-
                             // Queue up for later logging, does not matter if the file is deleted or not
                             _exceptionMessages.Enqueue(ResourceUtilities.FormatResourceStringStripCodeAndKeyword("GetSDKReferenceFiles.ProblemDeletingCacheFile", existingCacheFile, e.Message));
                         }
                     }
 
-                    var formatter = new BinaryFormatter();
                     using (var fs = new FileStream(referencesCacheFile, FileMode.Create))
                     {
-                        formatter.Serialize(fs, cacheFileInfo);
+                        var translator = BinaryTranslator.GetWriteTranslator(fs);
+                        cacheFileInfo.Translate(translator);
                     }
                 }
-                catch (Exception e)
+                catch (Exception e) when (!ExceptionHandling.IsCriticalException(e))
                 {
-                    if (ExceptionHandling.IsCriticalException(e))
-                    {
-                        throw;
-                    }
-
                     // Queue up for later logging, does not matter if the cache got written
                     _exceptionMessages.Enqueue(ResourceUtilities.FormatResourceStringStripCodeAndKeyword("GetSDKReferenceFiles.ProblemWritingCacheFile", referencesCacheFile, e.Message));
                 }
@@ -1205,11 +1194,8 @@ namespace Microsoft.Build.Tasks
         /// </summary>
         /// <remarks>This is a serialization format. Do not change member naming.</remarks>
         [Serializable]
-        private class SdkReferenceInfo
+        internal class SdkReferenceInfo
         {
-            /// <summary>
-            /// Constructor
-            /// </summary>
             public SdkReferenceInfo(string fusionName, string imageRuntime, bool isWinMD, bool isManagedWinmd)
             {
                 FusionName = fusionName;
@@ -1219,25 +1205,11 @@ namespace Microsoft.Build.Tasks
             }
 
             #region Properties
-            /// <summary>
-            /// The fusionName
-            /// </summary>
-            public string FusionName { get; }
 
-            /// <summary>
-            /// Is the file a winmd or not
-            /// </summary>
-            public bool IsWinMD { get; }
-
-            /// <summary>
-            /// Is the file a managed winmd or not
-            /// </summary>
-            public bool IsManagedWinmd { get; }
-
-            /// <summary>
-            /// What is the imageruntime information on it.
-            /// </summary>
-            public string ImageRuntime { get; }
+            public string FusionName { get; internal set; }
+            public bool IsWinMD { get; internal set; }
+            public bool IsManagedWinmd { get; internal set; }
+            public string ImageRuntime { get; internal set; }
 
             #endregion
         }
@@ -1245,64 +1217,75 @@ namespace Microsoft.Build.Tasks
         /// <summary>
         /// Structure that contains the on disk representation of the SDK in memory.
         /// </summary>
-        /// <remarks>This is a serialization format. Do not change member naming.</remarks>
-        [Serializable]
-        private class SDKInfo
+        internal class SDKInfo : ITranslatable
         {
-            // Current version for serialization. This should be changed when breaking changes
-            // are made to this class.
-            private const byte CurrentSerializationVersion = 1;
+            private IDictionary<string, SdkReferenceInfo> _pathToReferenceMetadata;
+            private IDictionary<string, List<string>> _directoryToFileList;
+            private int _hash;
 
-            // Version this instance is serialized with.
-            private byte _serializedVersion = CurrentSerializationVersion;
-
-            /// <summary>
-            /// Constructor
-            /// </summary>
-            public SDKInfo(ConcurrentDictionary<string, SdkReferenceInfo> pathToReferenceMetadata, ConcurrentDictionary<string, List<string>> directoryToFileList, int cacheHash)
+            internal SDKInfo()
             {
-                PathToReferenceMetadata = pathToReferenceMetadata;
-                DirectoryToFileList = directoryToFileList;
-                Hash = cacheHash;
+                _pathToReferenceMetadata = new Dictionary<string, SdkReferenceInfo>(StringComparer.OrdinalIgnoreCase);
+                _directoryToFileList = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+                _hash = 0;
+            }
+
+            public SDKInfo(ITranslator translator) : this()
+            {
+                Translate(translator);
+            }
+
+            public SDKInfo(IDictionary<string, SdkReferenceInfo> pathToReferenceMetadata, IDictionary<string, List<string>> directoryToFileList, int cacheHash)
+            {
+                this._pathToReferenceMetadata = pathToReferenceMetadata;
+                this._directoryToFileList = directoryToFileList;
+                this._hash = cacheHash;
             }
 
             /// <summary>
             /// A dictionary which maps a file path to a structure that contain some metadata information about that file.
             /// </summary>
-            public ConcurrentDictionary<string, SdkReferenceInfo> PathToReferenceMetadata { get; }
+            public IDictionary<string, SdkReferenceInfo> PathToReferenceMetadata { get { return _pathToReferenceMetadata; } }
 
-            /// <summary>
-            /// Dictionary which maps a directory to a list of file names within that directory. This is used to shortcut hitting the disk for the list of files inside of it.
-            /// </summary>
-            public ConcurrentDictionary<string, List<string>> DirectoryToFileList { get; }
+            public IDictionary<string, List<string>> DirectoryToFileList { get { return _directoryToFileList; } }
 
             /// <summary>
             /// Hashset
             /// </summary>
-            public int Hash { get; }
+            public int Hash { get { return _hash; } }
 
-            public static SDKInfo Deserialize(string cacheFile)
+            public void Translate(ITranslator translator)
             {
-                using (var fs = new FileStream(cacheFile, FileMode.Open))
+                translator.TranslateDictionary(ref _pathToReferenceMetadata, (ITranslator t, ref string s) => t.Translate(ref s), (ITranslator t, ref SdkReferenceInfo info) =>
                 {
-                    var formatter = new BinaryFormatter();
-                    var info = (SDKInfo)formatter.Deserialize(fs);
+                    info ??= new SdkReferenceInfo(null, null, false, false);
+                    string fusionName = info.FusionName;
+                    string imageRuntime = info.ImageRuntime;
+                    bool isManagedWinmd = info.IsManagedWinmd;
+                    bool isWinmd = info.IsWinMD;
+                    t.Translate(ref fusionName);
+                    t.Translate(ref imageRuntime);
+                    t.Translate(ref isManagedWinmd);
+                    t.Translate(ref isWinmd);
+                    info.FusionName = fusionName;
+                    info.ImageRuntime = imageRuntime;
+                    info.IsManagedWinmd = isManagedWinmd;
+                    info.IsWinMD = isWinmd;
+                }, count => new Dictionary<string, SdkReferenceInfo>(count, StringComparer.OrdinalIgnoreCase));
 
-                    // If the serialization versions don't match, don't use the cache
-                    if (info != null && info._serializedVersion != CurrentSerializationVersion)
-                    {
-                        return null;
-                    }
+                translator.TranslateDictionary(ref _directoryToFileList, (ITranslator t, ref string s) => t.Translate(ref s), (ITranslator t, ref List<string> fileList) =>
+                {
+                    t.Translate(ref fileList, (ITranslator t, ref string str) => { t.Translate(ref str); });
+                }, count => new Dictionary<string, List<string>>(count, StringComparer.OrdinalIgnoreCase));
 
-                    return info;
-                }
+                translator.Translate(ref _hash);
             }
         }
 
         /// <summary>
         /// This class represents the context information used by the background cache serialization thread.
         /// </summary>
-        private class SaveContext
+        internal class SaveContext
         {
             /// <summary>
             /// Constructor

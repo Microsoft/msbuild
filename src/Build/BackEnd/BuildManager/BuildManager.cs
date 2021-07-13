@@ -409,6 +409,8 @@ namespace Microsoft.Build.Execution
         {
             lock (_syncLock)
             {
+                AttachDebugger();
+
                 // Check for build in progress.
                 RequireState(BuildManagerState.Idle, "BuildInProgress");
 
@@ -556,6 +558,37 @@ namespace Microsoft.Build.Execution
 
                     _buildParameters.ProjectRootElementCache.DiscardImplicitReferences();
                 }
+            }
+        }
+
+        private void AttachDebugger()
+        {
+            if (Debugger.IsAttached)
+            {
+                return;
+            }
+
+            var processNameToBreakInto = Environment.GetEnvironmentVariable("MSBuildDebugBuildManagerOnStartProcessName");
+            var thisProcessMatchesName = string.IsNullOrWhiteSpace(processNameToBreakInto) || Process.GetCurrentProcess().ProcessName.Contains(processNameToBreakInto);
+
+            if (!thisProcessMatchesName)
+            {
+                return;
+            }
+
+            switch (Environment.GetEnvironmentVariable("MSBuildDebugBuildManagerOnStart"))
+            {
+#if FEATURE_DEBUG_LAUNCH
+                case "1":
+                    Debugger.Launch();
+                    break;
+#endif
+                case "2":
+                    // Sometimes easier to attach rather than deal with JIT prompt
+                    Process currentProcess = Process.GetCurrentProcess();
+                    Console.WriteLine($"Waiting for debugger to attach ({currentProcess.MainModule.FileName} PID {currentProcess.Id}).  Press enter to continue...");
+                    Console.ReadLine();
+                    break;
             }
         }
 

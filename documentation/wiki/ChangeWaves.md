@@ -29,5 +29,8 @@ The opt-out comes in the form of setting the environment variable `MSBuildDisabl
 - [Allow users that have certain special characters in their username to build successfully when using exec](https://github.com/dotnet/msbuild/pull/6223)
 - [Fail restore operations when an SDK is unresolveable](https://github.com/dotnet/msbuild/pull/6430)
 ### 17.0
+- [Scheduler should honor BuildParameters.DisableInprocNode](https://github.com/dotnet/msbuild/pull/6400)
+- [Don't compile globbing regexes on .NET Framework](https://github.com/dotnet/msbuild/pull/6632)
+- [Default to transitively copying content items](https://github.com/dotnet/msbuild/pull/6622)
 
 ## Change Waves No Longer In Rotation

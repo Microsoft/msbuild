@@ -629,7 +629,7 @@ namespace Microsoft.Build.UnitTests.Evaluation
                                      <PropertyGroup>
                                          <Foo>$(baz) $(bar)</Foo>
                                          <bar>Something</bar>
-                                         <baz>Something</baz>   
+                                         <baz>Something</baz>
                                      </PropertyGroup>
 
                                   <Target Name=""Test""/>
@@ -675,7 +675,7 @@ namespace Microsoft.Build.UnitTests.Evaluation
                                          <Foo1>$(baz) $(bar)</Foo1>
                                          <Foo>$(baz) $(bar)</Foo>
                                          <bar>Something</bar>
-                                         <baz>Something</baz>   
+                                         <baz>Something</baz>
                                      </PropertyGroup>
 
                                   <Target Name=""Test""/>
@@ -1860,12 +1860,12 @@ namespace Microsoft.Build.UnitTests.Evaluation
                         <Choose>
                           <When Condition='false'>
                             <ItemGroup>
-                              <i Include='i4'/>                     
+                              <i Include='i4'/>
                             </ItemGroup>
                           </When>
                           <When Condition='true'>
                             <ItemGroup>
-                              <i Include='i1'>                     
+                              <i Include='i1'>
                                 <m>m2</m>
                               </i>
                             </ItemGroup>
@@ -1876,7 +1876,7 @@ namespace Microsoft.Build.UnitTests.Evaluation
                           <When Condition='false'/>
                           <Otherwise>
                             <ItemGroup>
-                              <i Include='i5'/>                     
+                              <i Include='i5'/>
                             </ItemGroup>
                           </Otherwise>
                         </Choose>
@@ -4344,7 +4344,7 @@ namespace Microsoft.Build.UnitTests.Evaluation
         {
             string projectContents = ObjectModelHelpers.CleanupFileContents(@"
                              <Project ToolsVersion=""msbuilddefaulttoolsversion"" xmlns='msbuildnamespace'>
-                                
+
                                 <Import Project=""import.proj"" />
 
                             </Project>");
@@ -4396,9 +4396,9 @@ namespace Microsoft.Build.UnitTests.Evaluation
         /// <summary>
         /// Tests that an import, target, or task with a condition that contains an error but is short-circuited does not fail the build.  This can happen when you have a condition like:
         /// 'true' == 'false' AND '$([MSBuild]::GetDirectoryNameOfFileAbove($(NonExistentProperty), init.props))' != ''
-        /// 
+        ///
         /// The first condition is false so the second condition is not evaluated.  But in some cases we double evaluate the condition to log it.  The second evaluation will fail because it evaluates the whole string.
-        /// 
+        ///
         /// https://github.com/Microsoft/msbuild/issues/2259
         /// </summary>
         [Theory]

@@ -3151,10 +3151,13 @@ namespace Microsoft.Build.Tasks
                 // We can't easily filter those.  We can simply skip them.
                 return;
             }
-            catch (Exception e)
+            catch (ArgumentException e) when (e.InnerException is BadImageFormatException)
             {
-                if (ExceptionHandling.IsCriticalException(e))
-                    throw;
+                // BadImageFormatExceptions can be wrapped in ArgumentExceptions, so catch those, too. See https://referencesource.microsoft.com/#mscorlib/system/reflection/module.cs,857
+                return;
+            }
+            catch (Exception e) when (!ExceptionHandling.IsCriticalException(e))
+            {
                 _logger.LogErrorWithCodeFromResources("GenerateResource.CannotLoadAssemblyLoadFromFailed", name, e);
             }
 

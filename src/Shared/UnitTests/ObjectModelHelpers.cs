@@ -1987,44 +1987,38 @@ namespace Microsoft.Build.UnitTests
 
         internal class LoggingFileSystem : MSBuildFileSystemBase
         {
-            private readonly IFileSystem _wrappingFileSystem;
             private int _fileSystemCalls;
 
             public int FileSystemCalls => _fileSystemCalls;
 
             public ConcurrentDictionary<string, int> ExistenceChecks { get; } = new ConcurrentDictionary<string, int>();
 
-            public LoggingFileSystem(IFileSystem wrappingFileSystem = null)
-            {
-                _wrappingFileSystem = wrappingFileSystem ?? FileSystems.Default;
-            }
-
             public override TextReader ReadFile(string path)
             {
                 IncrementCalls(ref _fileSystemCalls);
 
-                return _wrappingFileSystem.ReadFile(path);
+                return base.ReadFile(path);
             }
 
             public override Stream GetFileStream(string path, FileMode mode, FileAccess access, FileShare share)
             {
                 IncrementCalls(ref _fileSystemCalls);
 
-                return _wrappingFileSystem.GetFileStream(path, mode, access, share);
+                return base.GetFileStream(path, mode, access, share);
             }
 
             public override string ReadFileAllText(string path)
             {
                 IncrementCalls(ref _fileSystemCalls);
 
-                return _wrappingFileSystem.ReadFileAllText(path);
+                return base.ReadFileAllText(path);
             }
 
             public override byte[] ReadFileAllBytes(string path)
             {
                 IncrementCalls(ref _fileSystemCalls);
 
-                return _wrappingFileSystem.ReadFileAllBytes(path);
+                return base.ReadFileAllBytes(path);
             }
 
             public override IEnumerable<string> EnumerateFiles(
@@ -2035,7 +2029,7 @@ namespace Microsoft.Build.UnitTests
             {
                 IncrementCalls(ref _fileSystemCalls);
 
-                return _wrappingFileSystem.EnumerateFiles(path, searchPattern, searchOption);
+                return base.EnumerateFiles(path, searchPattern, searchOption);
             }
 
             public override IEnumerable<string> EnumerateDirectories(
@@ -2046,7 +2040,7 @@ namespace Microsoft.Build.UnitTests
             {
                 IncrementCalls(ref _fileSystemCalls);
 
-                return _wrappingFileSystem.EnumerateDirectories(path, searchPattern, searchOption);
+                return base.EnumerateDirectories(path, searchPattern, searchOption);
             }
 
             public override IEnumerable<string> EnumerateFileSystemEntries(
@@ -2057,21 +2051,21 @@ namespace Microsoft.Build.UnitTests
             {
                 IncrementCalls(ref _fileSystemCalls);
 
-                return _wrappingFileSystem.EnumerateFileSystemEntries(path, searchPattern, searchOption);
+                return base.EnumerateFileSystemEntries(path, searchPattern, searchOption);
             }
 
             public override FileAttributes GetAttributes(string path)
             {
                 IncrementCalls(ref _fileSystemCalls);
 
-                return _wrappingFileSystem.GetAttributes(path);
+                return base.GetAttributes(path);
             }
 
             public override DateTime GetLastWriteTimeUtc(string path)
             {
                 IncrementCalls(ref _fileSystemCalls);
 
-                return _wrappingFileSystem.GetLastWriteTimeUtc(path);
+                return base.GetLastWriteTimeUtc(path);
             }
 
             public override bool DirectoryExists(string path)
@@ -2079,7 +2073,7 @@ namespace Microsoft.Build.UnitTests
                 IncrementCalls(ref _fileSystemCalls);
                 IncrementExistenceChecks(path);
 
-                return _wrappingFileSystem.DirectoryExists(path);
+                return base.DirectoryExists(path);
             }
 
             public override bool FileExists(string path)
@@ -2087,19 +2081,19 @@ namespace Microsoft.Build.UnitTests
                 IncrementCalls(ref _fileSystemCalls);
                 IncrementExistenceChecks(path);
 
-                return _wrappingFileSystem.FileExists(path);
+                return base.FileExists(path);
             }
 
-            private int _directoryEntryExistsCalls;
-            public int DirectoryEntryExistsCalls => _directoryEntryExistsCalls;
+            private int _fileOrDirectoryExistsCalls;
+            public int FileOrDirectoryExistsCalls => _fileOrDirectoryExistsCalls;
 
             public override bool FileOrDirectoryExists(string path)
             {
                 IncrementCalls(ref _fileSystemCalls);
-                IncrementCalls(ref _directoryEntryExistsCalls);
+                IncrementCalls(ref _fileOrDirectoryExistsCalls);
                 IncrementExistenceChecks(path);
 
-                return _wrappingFileSystem.DirectoryEntryExists(path);
+                return base.FileOrDirectoryExists(path);
             }
 
             private void IncrementCalls(ref int incremented)

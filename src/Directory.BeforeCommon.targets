@@ -110,7 +110,7 @@
     <DefineConstants Condition="$([MSBuild]::IsOSPlatform('windows'))">$(DefineConstants);TEST_ISWINDOWS</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(MonoBuild)' != 'true' and ($([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp1.0')) or $(TargetFramework.StartsWith('netstandard')))">
+  <PropertyGroup Condition="'$(MonoBuild)' != 'true' and ($([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp' or $([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETStandard')">
     <NetCoreBuild>true</NetCoreBuild>
     <DefineConstants>$(DefineConstants);RUNTIME_TYPE_NETCORE</DefineConstants>
   </PropertyGroup>
@@ -124,7 +124,7 @@
     <DefineConstants>$(DefineConstants);WORKAROUND_COREFX_19110</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1' or '$(TargetFramework)' == 'net5.0'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1' or '$(TargetFramework)' == 'net6.0'">
     <DefineConstants>$(DefineConstants);FEATURE_PIPEOPTIONS_CURRENTUSERONLY</DefineConstants>
     <DefineConstants Condition="'$(MachineIndependentBuild)' != 'true'">$(DefineConstants);FEATURE_NODE_REUSE</DefineConstants>
   </PropertyGroup>

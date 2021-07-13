@@ -370,7 +370,9 @@ Build
         private void Write(TaskStartedEventArgs e)
         {
             Write(BinaryLogRecordKind.TaskStarted);
-            WriteBuildEventArgsFields(e, writeMessage: false);
+            WriteBuildEventArgsFields(e, writeMessage: false, writeLineAndColumn: true);
+            Write(e.LineNumber);
+            Write(e.ColumnNumber);
             WriteDeduplicatedString(e.TaskName);
             WriteDeduplicatedString(e.ProjectFile);
             WriteDeduplicatedString(e.TaskFile);
@@ -454,6 +456,8 @@ Build
             WriteDeduplicatedString(e.EvaluatedCondition);
             Write(e.OriginallySucceeded);
             Write((int)e.BuildReason);
+            Write((int)e.SkipReason);
+            binaryWriter.WriteOptionalBuildEventContext(e.OriginalBuildEventContext);
         }
 
         private void Write(CriticalBuildMessageEventArgs e)
@@ -512,9 +516,14 @@ Build
             WriteTaskItemList(e.Items, e.LogItemMetadata);
         }
 
-        private void WriteBuildEventArgsFields(BuildEventArgs e, bool writeMessage = true)
+        private void WriteBuildEventArgsFields(BuildEventArgs e, bool writeMessage = true, bool writeLineAndColumn = false)
         {
             var flags = GetBuildEventArgsFieldFlags(e, writeMessage);
+            if (writeLineAndColumn)
+            {
+                flags |= BuildEventArgsFieldFlags.LineNumber | BuildEventArgsFieldFlags.ColumnNumber;
+            }
+
             Write((int)flags);
             WriteBaseFields(e, flags);
         }

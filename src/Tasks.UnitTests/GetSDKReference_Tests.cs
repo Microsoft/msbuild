@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -257,6 +258,38 @@ namespace Microsoft.Build.UnitTests.GetSDKReferenceFiles_Tests
             var getReferenceFolders2 = new GetSDKFolders2(ToolLocationHelper.GetSDKReferenceFolders);
 
             VerifySDKFolders(getReferenceFolders, getReferenceFolders2, "References", _sdkDirectory);
+        }
+
+        [Fact]
+        public void VerifyGetSdkReferenceTranslator()
+        {
+            Dictionary<string, GetSDKReferenceFiles.SdkReferenceInfo> pathToReferenceMetadata = new();
+            pathToReferenceMetadata.Add("first", new("dat", "dat2", true, false));
+            pathToReferenceMetadata.Add("second", new("inf", "inf2", false, false));
+            Dictionary<string, List<string>> directoryToFileList = new();
+            directoryToFileList.Add("third", new List<string>() { "a", "b", "c" });
+            directoryToFileList.Add("fourth", new List<string>() { "1", "2", "3" });
+            GetSDKReferenceFiles.SDKInfo writeInfo = new(pathToReferenceMetadata, directoryToFileList, 47);
+            GetSDKReferenceFiles.SaveContext contextWriter = new("d", "n", writeInfo);
+            GetSDKReferenceFiles.SDKInfo readInfo = null;
+            using (TestEnvironment env = TestEnvironment.Create())
+            {
+                TransientTestFolder folder = env.CreateFolder();
+                GetSDKReferenceFiles.SDKFilesCache cache = new(null, folder.Path, null, null, null);
+                cache.SaveAssemblyListToCacheFile(contextWriter);
+                GetSDKReferenceFiles.SDKFilesCache cache2 = new(null, folder.Path, null, null, null);
+                readInfo = cache2.LoadAssemblyListFromCacheFile("d", "n");
+            }
+            readInfo.DirectoryToFileList.Count.ShouldBe(2);
+            readInfo.DirectoryToFileList["fourth"].Count.ShouldBe(3);
+            readInfo.DirectoryToFileList["fourth"][1].ShouldBe("2");
+            readInfo.DirectoryToFileList["third"][0].ShouldBe("a");
+            readInfo.Hash.ShouldBe(47);
+            readInfo.PathToReferenceMetadata.Count.ShouldBe(2);
+            readInfo.PathToReferenceMetadata["first"].FusionName.ShouldBe("dat");
+            readInfo.PathToReferenceMetadata["first"].IsManagedWinmd.ShouldBeFalse();
+            readInfo.PathToReferenceMetadata["first"].IsWinMD.ShouldBeTrue();
+            readInfo.PathToReferenceMetadata["second"].ImageRuntime.ShouldBe("inf2");
         }
 
         private static void VerifySDKFolders(GetSDKFolders singleParamDelegate, GetSDKFolders2 multiParamDelegate, string folderName, string sdkDirectory)

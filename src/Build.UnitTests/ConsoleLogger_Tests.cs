@@ -318,7 +318,7 @@ namespace Microsoft.Build.UnitTests
             output.ShouldContain("source_of_error : error : Hello from project 2 [" + project.ProjectFile + ":: Number=2 TargetFramework=netcoreapp2.1]");
         }
 
-        [Fact]
+        [Fact(Skip = "https://github.com/dotnet/msbuild/issues/6518")]
         [SkipOnTargetFramework(TargetFrameworkMonikers.Netcoreapp, "Minimal path validation in Core allows expanding path containing quoted slashes.")]
         [SkipOnTargetFramework(TargetFrameworkMonikers.Mono, "Minimal path validation in Mono allows expanding path containing quoted slashes.")]
         public void TestItemsWithUnexpandableMetadata()
@@ -338,7 +338,8 @@ namespace Microsoft.Build.UnitTests
  <Target Name=""X"" />
 </Project>", logger);
 
-            sc.ToString().ShouldContain("\"a\\b\\%(Filename).c\"");
+            var text = sc.ToString();
+            text.ShouldContain("\"a\\b\\%(Filename).c\"");
         }
 
         /// <summary>

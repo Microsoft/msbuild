@@ -26,7 +26,7 @@ namespace Microsoft.Build.BuildEngine
         /// <summary>
         /// This method is called when the parent engine doesn't see activity for a preset time period to
         /// determine if the whole system is making forward progress. In order to that, status is collected
-        /// from every node in the system. If no node is making forward progress then the graph of all the 
+        /// from every node in the system. If no node is making forward progress then the graph of all the
         /// inprogress targets is analyzed for cycles. If a cycle is found the appropriate node is instructed
         /// to break it. If no cause for deadlock can be determined the system is shutdown.
         /// </summary>
@@ -90,7 +90,7 @@ namespace Microsoft.Build.BuildEngine
                 }
                 else if (nodeStatus[i].HasExited)
                 {
-                    // A node has exited prematurely. The only option is to shutdown 
+                    // A node has exited prematurely. The only option is to shutdown
                     LogOrDumpError("ChildExitedPrematurely", i + 1);
 
                     SystemShutdown();
@@ -142,7 +142,7 @@ namespace Microsoft.Build.BuildEngine
                                                   cycleDetector.CycleEdgeParent);
                 // Use the amount of time it took us to receive the NodeStatus and buffer it a little because node status is sent via a faster code path
                 ignoreTimeout = DateTime.Now.Ticks + requestDurationTime + (cycleBreakTimeout * TimeSpan.TicksPerMillisecond);
-                return currentTimeout; 
+                return currentTimeout;
             }
 
             // The system doesn't appear to be making progress. Switch to a largest sampling interval.
@@ -208,7 +208,7 @@ namespace Microsoft.Build.BuildEngine
         }
 
         /// <summary>
-        /// Adds a set of nodeStatus's to the cycle graph 
+        /// Adds a set of nodeStatus's to the cycle graph
         /// </summary>
         private void AddTargetStatesToCycleDetector(NodeStatus[] nodeStatus, TargetCycleDetector cycleDetector)
         {
@@ -229,7 +229,7 @@ namespace Microsoft.Build.BuildEngine
             {
                 TimeSpan timeSinceLastNodeTaskActivity = new TimeSpan(nodeStatus[i].TimeSinceLastTaskActivity);
                 TimeSpan timeSinceLastNodeLoopActivity = new TimeSpan(nodeStatus[i].TimeSinceLastLoopActivity);
- 
+
                 Console.WriteLine("Status: " + i + " Task Activity " + timeSinceLastNodeTaskActivity.TotalMilliseconds +
                                   " Loop Activity " + timeSinceLastNodeLoopActivity.TotalMilliseconds + " Queue depth " +
                                   nodeStatus[i].QueueDepth);
@@ -262,11 +262,11 @@ namespace Microsoft.Build.BuildEngine
 
 
         /// <summary>
-        /// This function is called to break the link between two targets that creates a cycle. The link could be 
+        /// This function is called to break the link between two targets that creates a cycle. The link could be
         /// due to depends/onerror relationship between parent and child. In that case both parent and child are
-        /// on the same node and within the same project. Or the link could be formed by an IBuildEngine callback 
-        /// (made such by tasks such as MSBuild or CallTarget) in which case there maybe multiple requests forming 
-        /// same link between parent and child. Also in that case parent and child maybe on different nodes and/or in 
+        /// on the same node and within the same project. Or the link could be formed by an IBuildEngine callback
+        /// (made such by tasks such as MSBuild or CallTarget) in which case there maybe multiple requests forming
+        /// same link between parent and child. Also in that case parent and child maybe on different nodes and/or in
         /// different projects. In either case the break is forced by finding the correct builds states and causing
         /// them to fail.
         /// </summary>
@@ -291,7 +291,7 @@ namespace Microsoft.Build.BuildEngine
             {
                 parentStates[i].CurrentBuildContextState = ProjectBuildState.BuildContextState.CycleDetected;
                 TaskExecutionContext taskExecutionContext =
-                    new TaskExecutionContext(parentProject, childTarget, null, parentStates[i], EngineCallback.invalidEngineHandle, 
+                    new TaskExecutionContext(parentProject, childTarget, null, parentStates[i], EngineCallback.invalidEngineHandle,
                                              EngineCallback.inProcNode, null);
 
                 parentEngine.PostTaskOutputUpdates(taskExecutionContext);
@@ -305,7 +305,7 @@ namespace Microsoft.Build.BuildEngine
         /// </summary>
         internal List<ProjectBuildState> FindConnectingContexts
         (
-            TargetInProgessState child, 
+            TargetInProgessState child,
             TargetInProgessState parent,
             Target childTarget,
             List<ProjectBuildState> waitingStates,
