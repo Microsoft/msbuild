@@ -4,22 +4,50 @@ http://EditorConfig.org
 # top-most EditorConfig file
 root = true
 
-# Default settings:
-# Use 4 spaces as indentation
+# Defaults
 [*]
-indent_style = space
+charset = utf-8
 indent_size = 4
-insert_final_newline = true
+indent_style = space
+insert_final_newline = false
 trim_trailing_whitespace = true
 
-# Xml project files
-[*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,projitems,shproj}]
+# JSON files
+[*.{json,slnf}]
 indent_size = 2
 
-# Xml config files
-[*.{props,targets,ruleset,config,nuspec,resx,vsixmanifest,vsct}]
+# Markdown files
+[*.md]
 indent_size = 2
 
+# Bash scripts
+[*.sh]
+indent_size = 2
+
+# MSBuild Solution files
+[*.sln]
+tab_width = 4
+indent_style = tab
+
+# MSBuild XML Build files
+[*.{props,targets,tasks,overridetasks}]
+indent_size = 2
+
+# MSBuild XML Project files
+[*.{csproj,vbproj,shproj,vcxproj,vcxproj.filters,proj,projitems}]
+indent_size = 2
+
+# VisualStudio XAML Rule files
+[*.xaml]
+indent_size = 2
+
+# VisualStudio XML Configuration files
+[*.{ruleset,config,nuspec,resx,vsixmanifest,vsct}]
+indent_size = 2
+
+# Code files
 [src/**/*.{cs,vb}]
+charset = utf-8-bom
+
 # IDE0005: Remove unnecessary usings/imports
 dotnet_diagnostic.IDE0005.severity = warning
