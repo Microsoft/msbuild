@@ -407,6 +407,12 @@ namespace Microsoft.Build.Tasks
                 }
             }
 
+            if (reference.FullPath.Length > 0 && ChangeWaves.AreFeaturesEnabled(ChangeWaves.Wave17_0))
+            {
+                // Saves effort and makes deduplication possible downstream
+                reference.NormalizeFullPath();
+            }
+
             References[assemblyName] = reference;
         }
 
@@ -1337,7 +1343,11 @@ namespace Microsoft.Build.Tasks
             // If the path was resolved, then specify the full path on the reference.
             if (resolvedPath != null)
             {
-                if (!Path.IsPathRooted(resolvedPath))
+                if (ChangeWaves.AreFeaturesEnabled(ChangeWaves.Wave17_0))
+                {
+                    resolvedPath = FileUtilities.NormalizePath(resolvedPath);
+                }
+                else if (!Path.IsPathRooted(resolvedPath))
                 {
                     resolvedPath = Path.GetFullPath(resolvedPath);
                 }
