@@ -1,0 +1,1 @@
+M:System.Globalization.CompareInfo.IndexOf(System.String,System.Char)

@@ -67,6 +67,9 @@
          PrivateAssets to keep this reference (auto-added when targeting netcoreapp*)
          from making it into our NuGet packages. -->
     <PackageReference Update="Microsoft.NETCore.App" PrivateAssets="All" />
+
+    <!-- Configure analyzer to forbid certain API calls -->
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)BannedSymbols.txt" />
   </ItemGroup>
 
   <!-- GenAPI settings -->
