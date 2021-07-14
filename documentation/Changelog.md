@@ -10,8 +10,9 @@ This version of MSBuild will ship with Visual Studio 2019 version 16.11.0 and .N
 
 #### Added
 
-* Additional properties documented and available for completion in Visual Studio (#6500).
+* Additional properties documented and available for completion in Visual Studio (#6500, #6530).
 * The `SignFile` task is now available in MSBuild on .NET 5.0 (#6509). Thanks, @Zastai!
+* New version properties `MSBuildFileVersion` (4-part, matches file version) and `MSBuildSemanticVersion` (matches package versions) are now available for use (#6534).
 #### Changed
 
 * When using the experimental cache API, schedule proxy builds to the in-proc node for performance (#6386).
@@ -24,14 +25,27 @@ This version of MSBuild will ship with Visual Studio 2019 version 16.11.0 and .N
 * Added locking to avoid race conditions in `BuildManager` (#6412).
 * Allow `ResolveAssemblyReferences` precomputed cache files to be in read-only locations (#6393).
 * 64-bit `al.exe` is used when targeting 64-bit architectures (for real this time) (#6484).
+* Builds with `ProduceOnlyReferenceAssembly` no longer expect debug symbols to be produced (#6511). Thanks, @Zastai!
 
 #### Infrastructure
 
 * Use a packaged C# compiler to avoid changes in reference assembly generation caused by compiler changes (#6431).
 * Use more resilient test-result upload patterns (#6489).
 * Conditional compilation for .NET Core within our repo now includes new .NET 5.0+ runtimes (#6538).
+* Switched to OneLocBuild for localization PRs (#6561).
+* Moved to latest Ubuntu image for PR test legs (#6573).
 
 #### Documentation
+
+## MSBuild 16.10.2
+
+This version of MSBuild shipped with Visual Studio 2019 version 16.10.2 and will ship with .NET SDK 5.0.302.
+
+#### Fixed
+
+* Fixed a regression in the `MakeRelative` property function that dropped trailing slashes (#6513). Thanks, @dsparkplug and @pmisik!
+* Fixed a regression in glob matching where files without extensions were erroneously not matched (#6531).
+* Fixed a change in logging that caused crashes in Azure DevOps loggers (#6520).
 
 ## MSBuild 16.10.1
 
