@@ -29,7 +29,7 @@ namespace Microsoft.Build.Shared
                 "Microsoft.Build.Utilities.Core",
             }.ToImmutableHashSet();
 
-        internal static readonly string[] Extensions = new[] { "ni.dll", "ni.exe", "dll", "exe" };
+        internal static readonly string[] Extensions = new[] { "dll", "exe" };
 
 
         public MSBuildLoadContext(string assemblyPath)
