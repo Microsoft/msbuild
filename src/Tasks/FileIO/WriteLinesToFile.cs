@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Build.Eventing;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using System;
@@ -87,27 +88,33 @@ namespace Microsoft.Build.Tasks
                     {
                         Directory.CreateDirectory(directoryPath);
                         string contentsAsString = buffer.ToString();
-                        try
+
+                        // When WriteOnlyWhenDifferent is set, read the file and if they're the same return.
+                        if (WriteOnlyWhenDifferent)
                         {
-                            // When WriteOnlyWhenDifferent is set, read the file and if they're the same return.
-                            if (WriteOnlyWhenDifferent && FileUtilities.FileExistsNoThrow(File.ItemSpec))
+                            MSBuildEventSource.Log.WriteLinesToFileUpToDateStart();
+                            try
                             {
-                                string existingContents = System.IO.File.ReadAllText(File.ItemSpec);
-                                if (existingContents.Length == buffer.Length)
+                                if (FileUtilities.FileExistsNoThrow(File.ItemSpec))
                                 {
-                                    if (existingContents.Equals(contentsAsString))
+                                    string existingContents = System.IO.File.ReadAllText(File.ItemSpec);
+                                    if (existingContents.Length == buffer.Length)
                                     {
-                                        Log.LogMessageFromResources(MessageImportance.Low, "WriteLinesToFile.SkippingUnchangedFile", File.ItemSpec);
-                                        return true;
+                                        if (existingContents.Equals(contentsAsString))
+                                        {
+                                            Log.LogMessageFromResources(MessageImportance.Low, "WriteLinesToFile.SkippingUnchangedFile", File.ItemSpec);
+                                            MSBuildEventSource.Log.WriteLinesToFileUpToDateStop(File.ItemSpec, true);
+                                            return true;
+                                        }
                                     }
                                 }
                             }
+                            catch (IOException)
+                            {
+                                Log.LogMessageFromResources(MessageImportance.Low, "WriteLinesToFile.ErrorReadingFile", File.ItemSpec);
+                            }
+                            MSBuildEventSource.Log.WriteLinesToFileUpToDateStop(File.ItemSpec, false);
                         }
-                        catch (IOException)
-                        {
-                            Log.LogMessageFromResources(MessageImportance.Low, "WriteLinesToFile.ErrorReadingFile", File.ItemSpec);
-                        }
-
 
                         System.IO.File.WriteAllText(File.ItemSpec, contentsAsString, encoding);
                     }
