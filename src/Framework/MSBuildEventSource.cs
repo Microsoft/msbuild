@@ -417,6 +417,18 @@ namespace Microsoft.Build.Eventing
         {
             WriteEvent(55, size);
         }
+
+        [Event(56, Keywords = Keywords.All)]
+        public void TargetUpToDateStart()
+        {
+            WriteEvent(56);
+        }
+
+        [Event(57, Keywords = Keywords.All)]
+        public void TargetUpToDateStop(int result)
+        {
+            WriteEvent(57, result);
+        }
         #endregion
     }
 }

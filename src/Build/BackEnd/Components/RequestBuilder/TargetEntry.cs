@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Evaluation;
+using Microsoft.Build.Eventing;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
@@ -464,8 +465,10 @@ namespace Microsoft.Build.BackEnd
                         Lookup lookupForExecution;
 
                         // UNDONE: (Refactor) Refactor TargetUpToDateChecker to take a logging context, not a logging service.
+                        MSBuildEventSource.Log.TargetUpToDateStart();
                         TargetUpToDateChecker dependencyAnalyzer = new TargetUpToDateChecker(requestEntry.RequestConfiguration.Project, _target, targetLoggingContext.LoggingService, targetLoggingContext.BuildEventContext);
                         DependencyAnalysisResult dependencyResult = dependencyAnalyzer.PerformDependencyAnalysis(bucket, out changedTargetInputs, out upToDateTargetInputs);
+                        MSBuildEventSource.Log.TargetUpToDateStop((int)dependencyResult);
 
                         switch (dependencyResult)
                         {
