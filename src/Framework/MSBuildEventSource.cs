@@ -417,6 +417,18 @@ namespace Microsoft.Build.Eventing
         {
             WriteEvent(55, size);
         }
+
+        [Event(58, Keywords = Keywords.All)]
+        public void CopyUpToDateStart(string path)
+        {
+            WriteEvent(58, path);
+        }
+
+        [Event(59, Keywords = Keywords.All)]
+        public void CopyUpToDateStop(string path)
+        {
+            WriteEvent(59, path);
+        }
         #endregion
     }
 }

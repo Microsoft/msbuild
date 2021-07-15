@@ -12,6 +12,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Shared.FileSystem;
+using Microsoft.Build.Eventing;
 
 namespace Microsoft.Build.Tasks
 {
@@ -431,6 +432,7 @@ namespace Microsoft.Build.Tasks
             {
                 bool copyComplete = false;
                 string destPath = DestinationFiles[i].ItemSpec;
+                MSBuildEventSource.Log.CopyUpToDateStart(destPath);
                 if (filesActuallyCopied.TryGetValue(destPath, out string originalSource))
                 {
                     if (String.Equals(originalSource, SourceFiles[i].ItemSpec, StringComparison.OrdinalIgnoreCase))
@@ -451,6 +453,10 @@ namespace Microsoft.Build.Tasks
                     {
                         success = false;
                     }
+                }
+                else
+                {
+                    MSBuildEventSource.Log.CopyUpToDateStop(destPath);
                 }
 
                 if (copyComplete)
@@ -534,6 +540,7 @@ namespace Microsoft.Build.Tasks
                         string sourcePath = sourceItem.ItemSpec;
 
                         // Check if we just copied from this location to the destination, don't copy again.
+                        MSBuildEventSource.Log.CopyUpToDateStart(destItem.ItemSpec);
                         bool copyComplete = partitionIndex > 0 &&
                                             String.Equals(
                                                 sourcePath,
@@ -554,6 +561,10 @@ namespace Microsoft.Build.Tasks
                                 // Thread race to set outer variable but they race to set the same (false) value.
                                 success = false;
                             }
+                        }
+                        else
+                        {
+                            MSBuildEventSource.Log.CopyUpToDateStop(destItem.ItemSpec);
                         }
 
                         if (copyComplete)
@@ -710,6 +721,7 @@ namespace Microsoft.Build.Tasks
                         "SkipUnchangedFiles",
                         "true"
                     );
+                    MSBuildEventSource.Log.CopyUpToDateStop(destinationFileState.Name);
                 }
                 // We only do the cheap check for identicalness here, we try the more expensive check
                 // of comparing the fullpaths of source and destination to see if they are identical,
@@ -719,7 +731,12 @@ namespace Microsoft.Build.Tasks
                              destinationFileState.Name,
                              StringComparison.OrdinalIgnoreCase))
                 {
+                    MSBuildEventSource.Log.CopyUpToDateStop(destinationFileState.Name);
                     success = DoCopyWithRetries(sourceFileState, destinationFileState, copyFile);
+                }
+                else
+                {
+                    MSBuildEventSource.Log.CopyUpToDateStop(destinationFileState.Name);
                 }
             }
             catch (OperationCanceledException)
