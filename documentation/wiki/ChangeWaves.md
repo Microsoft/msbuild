@@ -31,6 +31,7 @@ A wave of features is set to "rotate out" (i.e. become standard functionality) t
 - [Scheduler should honor BuildParameters.DisableInprocNode](https://github.com/dotnet/msbuild/pull/6400)
 - [Don't compile globbing regexes on .NET Framework](https://github.com/dotnet/msbuild/pull/6632)
 - [Default to transitively copying content items](https://github.com/dotnet/msbuild/pull/6622)
+- [Reference assemblies are now no longer placed in the `bin` directory by default](https://github.com/dotnet/msbuild/pull/6560)
 
 ## Change Waves No Longer In Rotation
 ### 16.8
