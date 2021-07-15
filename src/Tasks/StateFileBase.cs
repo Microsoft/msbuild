@@ -77,8 +77,17 @@ namespace Microsoft.Build.Tasks
                     using (FileStream s = File.OpenRead(stateFile))
                     {
                         using var translator = BinaryTranslator.GetReadTranslator(s, buffer: null);
+
                         byte version = 0;
                         translator.Translate(ref version);
+                        // If the version is wrong, log a message not a warning. This could be a valid cache with the wrong version preventing correct deserialization.
+                        // For the latter case, internals may be unexpectedly null.
+                        if (version != CurrentSerializationVersion)
+                        {
+                            log.LogMessageFromResources("General.CouldNotReadStateFileMessage", stateFile, log.FormatResourceString("General.IncompatibleStateFileType"));
+                            return null;
+                        }
+
                         var constructors = requiredReturnType.GetConstructors();
                         foreach (var constructor in constructors)
                         {
@@ -88,18 +97,8 @@ namespace Microsoft.Build.Tasks
                                 retVal = constructor.Invoke(new object[] { translator }) as StateFileBase;
                             }
                         }
-
-                        // If retVal is still null or the version is wrong, log a message not a warning. This could be a valid cache with the wrong version preventing correct deserialization.
-                        // For the latter case, internals may be unexpectedly null.
-                        if (retVal == null || version != CurrentSerializationVersion)
-                        {
-                            // When upgrading to Visual Studio 2008 and running the build for the first time the resource cache files are replaced which causes a cast error due
-                            // to a new version number on the tasks class. "Unable to cast object of type 'Microsoft.Build.Tasks.SystemState' to type 'Microsoft.Build.Tasks.StateFileBase".
-                            // If there is an invalid cast, a message rather than a warning should be emitted.
-                            log.LogMessageFromResources("General.CouldNotReadStateFileMessage", stateFile, log.FormatResourceString("General.IncompatibleStateFileType"));
-                            return null;
-                        }
-                        else if (!requiredReturnType.IsInstanceOfType(retVal))
+                        
+                        if (retVal == null || !requiredReturnType.IsInstanceOfType(retVal))
                         {
                             log.LogMessageFromResources("General.CouldNotReadStateFileMessage", stateFile,
                                 log.FormatResourceString("General.IncompatibleStateFileType"));
