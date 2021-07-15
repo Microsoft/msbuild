@@ -1760,7 +1760,25 @@ namespace Microsoft.Build.BackEnd
 
                         if (affinityMismatch)
                         {
-                            BuildResult result = new BuildResult(request, new InvalidOperationException(ResourceUtilities.FormatResourceStringStripCodeAndKeyword("AffinityConflict", requestAffinity, existingRequestAffinity)));
+                            ErrorUtilities.VerifyThrowInternalError(
+                                _configCache.HasConfiguration(request.ConfigurationId),
+                                "A request should have a configuration if it makes it this far in the build process.");
+
+                            var config = _configCache[request.ConfigurationId];
+                            var globalProperties = string.Join(
+                                ";",
+                                config.GlobalProperties.ToDictionary().Select(kvp => $"{kvp.Key}={kvp.Value}"));
+
+                            var result = new BuildResult(
+                                request,
+                                new InvalidOperationException(
+                                    ResourceUtilities.FormatResourceStringStripCodeAndKeyword(
+                                        "AffinityConflict",
+                                        requestAffinity,
+                                        existingRequestAffinity,
+                                        config.ProjectFullPath,
+                                        globalProperties
+                                        )));
                             response = GetResponseForResult(nodeForResults, request, result);
                             responses.Add(response);
                             continue;

@@ -1790,8 +1790,8 @@
         <note>{StrBegin="MSB4209: "}</note>
       </trans-unit>
       <trans-unit id="AffinityConflict">
-        <source>MSB4213: The specified request affinity {0} conflicts with a previous affinity {1} specified for this project.</source>
-        <target state="translated">MSB4213: 指定的请求关联 {0} 与先前为此项目指定的关联 {1} 冲突。</target>
+        <source>MSB4213: The specified request affinity {0} conflicts with a previous affinity {1} specified for project {2} with global properties {3}</source>
+        <target state="new">MSB4213: The specified request affinity {0} conflicts with a previous affinity {1} specified for project {2} with global properties {3}</target>
         <note>{StrBegin="MSB4213: "}</note>
       </trans-unit>
       <trans-unit id="UnableToCreateNode">
