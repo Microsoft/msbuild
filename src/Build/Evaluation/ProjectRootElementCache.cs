@@ -268,7 +268,7 @@ namespace Microsoft.Build.Evaluation
             if (projectRootElement == null || projectRootElementIsInvalid)
             {
                 // We do not lock loading with common _locker of the cache, to avoid lock contention.
-                // Decided also not to lock this section with the key specific locker to avoid the overhead and code overcomplification, as
+                // Decided also not to lock this section with the key specific locker to avoid the overhead and code overcomplication, as
                 // it is not likely that two threads would use Get function for the same project simulteniously and it is not a big deal if in some cases we load the same project twice.
 
                 ProjectRootElement newProjectRootElement = openProjectRootElement(projectFile, this);
