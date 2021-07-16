@@ -207,8 +207,13 @@ namespace Microsoft.Build.Construction
         /// Assumes path is already normalized.
         /// May throw InvalidProjectFileException.
         /// </summary>
-        private ProjectRootElement(string path, ProjectRootElementCacheBase projectRootElementCache,
-            bool preserveFormatting)
+        private ProjectRootElement
+            (
+                string path,
+                ProjectRootElementCacheBase projectRootElementCache,
+                bool preserveFormatting,
+                bool addToCache = true
+            )
         {
             ErrorUtilities.VerifyThrowArgumentLength(path, nameof(path));
             ErrorUtilities.VerifyThrowInternalRooted(path);
@@ -223,7 +228,9 @@ namespace Microsoft.Build.Construction
 
             ProjectParser.Parse(document, this);
 
-            projectRootElementCache.AddEntry(this);
+            if (addToCache) {
+                projectRootElementCache.AddEntry(this);
+            }
         }
 
         /// <summary>
@@ -1774,7 +1781,7 @@ namespace Microsoft.Build.Construction
 
             ProjectRootElement projectRootElement = projectRootElementCache.Get(
                 fullPath,
-                (path, cache) => CreateProjectFromPath(path, cache, preserveFormatting: false),
+                (path, cache) => CreateProjectFromPath(path, cache, preserveFormatting: false, addToCache: false),
                 isExplicitlyLoaded,
                 // don't care about formatting, reuse whatever is there
                 preserveFormatting: null);
@@ -1996,7 +2003,8 @@ namespace Microsoft.Build.Construction
             return new ProjectRootElement(
                 path,
                 projectRootElementCache,
-                preserveFormatting);
+                preserveFormatting,
+                addToCache: false);
         }
 
         /// <summary>
@@ -2010,7 +2018,8 @@ namespace Microsoft.Build.Construction
             (
                 string projectFile,
                 ProjectRootElementCacheBase projectRootElementCache,
-                bool preserveFormatting
+                bool preserveFormatting,
+                bool addToCache
             )
         {
             ErrorUtilities.VerifyThrowInternalRooted(projectFile);
@@ -2023,7 +2032,7 @@ namespace Microsoft.Build.Construction
                 }
 
                 // OK it's a regular project file, load it normally.
-                return new ProjectRootElement(projectFile, projectRootElementCache, preserveFormatting);
+                return new ProjectRootElement(projectFile, projectRootElementCache, preserveFormatting, addToCache);
             }
             catch (InvalidProjectFileException)
             {

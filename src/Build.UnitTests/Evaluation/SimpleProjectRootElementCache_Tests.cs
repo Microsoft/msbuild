@@ -60,7 +60,6 @@ namespace Microsoft.Build.Engine.UnitTests.Evaluation
             ProjectRootElement rootElementToCache = ProjectRootElement.Create(projectFileToCache);
             ProjectRootElement OpenFunc(string pathArg, ProjectRootElementCacheBase cacheArg)
             {
-                cacheArg.AddEntry(rootElementToCache);
                 return rootElementToCache;
             }
 
@@ -79,7 +78,6 @@ namespace Microsoft.Build.Engine.UnitTests.Evaluation
             ProjectRootElement rootElementToCache = ProjectRootElement.Create(projectFileToCache);
             ProjectRootElement OpenFunc(string pathArg, ProjectRootElementCacheBase cacheArg)
             {
-                cacheArg.AddEntry(rootElementToCache);
                 return rootElementToCache;
             }
 
@@ -112,25 +110,8 @@ namespace Microsoft.Build.Engine.UnitTests.Evaluation
             ProjectRootElement rootElementToCache = ProjectRootElement.Create(projectFileToCache);
             ProjectRootElement OpenFunc(string pathArg, ProjectRootElementCacheBase cacheArg)
             {
-                cacheArg.AddEntry(rootElementToCache);
                 return rootElementToCache;
             }
-
-            var cache = new SimpleProjectRootElementCache();
-
-            Should.Throw<InternalErrorException>(() =>
-            {
-                cache.Get(projectFile, OpenFunc, false, null);
-            });
-        }
-
-        [Fact]
-        public void Get_GivenOpenFuncWhichDoesNotAddToCache_ThrowsInternalErrorException()
-        {
-            string projectFile = NativeMethodsShared.IsUnixLike ? "/foo" : "c:\\foo";
-            string openFuncPath = NativeMethodsShared.IsUnixLike ? "/foo" : "c:\\foo";
-            ProjectRootElement openFuncElement = ProjectRootElement.Create(openFuncPath);
-            ProjectRootElement OpenFunc(string pathArg, ProjectRootElementCacheBase cacheArg) => openFuncElement;
 
             var cache = new SimpleProjectRootElementCache();
 

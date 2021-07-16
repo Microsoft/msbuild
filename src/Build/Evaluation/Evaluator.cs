@@ -1930,8 +1930,6 @@ namespace Microsoft.Build.Evaluation
                     }
                 }
 
-                _projectRootElementCache.AddEntry(project);
-
                 return project;
             }
 

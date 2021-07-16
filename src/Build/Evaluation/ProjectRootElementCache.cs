@@ -131,65 +131,33 @@ namespace Microsoft.Build.Evaluation
             LoadProjectsReadOnly = loadProjectsReadOnly;
         }
 
+
         /// <summary>
-        /// Returns an existing ProjectRootElement for the specified file path, if any.
-        /// If none exists, calls the provided delegate to load one, and adds that to the cache.
-        /// The reason that it calls back to do this is so that the cache is locked between determining
-        /// that the entry does not exist and adding the entry.
-        /// 
-        /// If <see cref="_autoReloadFromDisk"/> was set to true, and the file on disk has changed since it was cached,
-        /// it will be reloaded before being returned.
-        /// 
-        /// Thread safe.
+        /// Returns true if given cache entry exists and is outdated.
         /// </summary>
-        /// <remarks>
-        /// Never needs to consult the strong cache as well, since if the item is in there, it will
-        /// not have left the weak cache.
-        /// If item is found, boosts it to the top of the strong cache.
-        /// </remarks>
-        /// <param name="projectFile">The project file which contains the ProjectRootElement.  Must be a full path.</param>
-        /// <param name="openProjectRootElement">The delegate to use to load if necessary. May be null.</param>
-        /// <param name="isExplicitlyLoaded"><code>true</code> if the project is explicitly loaded, otherwise <code>false</code>.</param>
-        /// <param name="preserveFormatting"><code>true</code> to the project was loaded with the formated preserved, otherwise <code>false</code>.</param>
-        /// <returns>The ProjectRootElement instance if one exists.  Null otherwise.</returns>
-        internal override ProjectRootElement Get(string projectFile, OpenProjectRootElement openProjectRootElement, bool isExplicitlyLoaded,
-            bool? preserveFormatting)
+        private bool IsInvalidEntry(string projectFile, ProjectRootElement projectRootElement)
         {
-            // Should already have been canonicalized
-            ErrorUtilities.VerifyThrowInternalRooted(projectFile);
-
-            lock (_locker)
+            if (projectRootElement != null && _autoReloadFromDisk)
             {
-                ProjectRootElement projectRootElement;
-                _weakCache.TryGetValue(projectFile, out projectRootElement);
+                FileInfo fileInfo = FileUtilities.GetFileInfoNoThrow(projectFile);
 
-                if (preserveFormatting != null && projectRootElement != null && projectRootElement.XmlDocument.PreserveWhitespace != preserveFormatting)
+                // If the file doesn't exist on disk, go ahead and use the cached version.
+                // It's an in-memory project that hasn't been saved yet.
+                if (fileInfo != null)
                 {
-                    //  Cached project doesn't match preserveFormatting setting, so reload it
-                    projectRootElement.Reload(true, preserveFormatting);
-                }
-
-                if (projectRootElement != null && _autoReloadFromDisk)
-                {
-                    FileInfo fileInfo = FileUtilities.GetFileInfoNoThrow(projectFile);
-
-                    // If the file doesn't exist on disk, go ahead and use the cached version.
-                    // It's an in-memory project that hasn't been saved yet.
-                    if (fileInfo != null)
+                    if (fileInfo.LastWriteTime != projectRootElement.LastWriteTimeWhenRead)
                     {
-                        bool forgetEntry = false;
-
-                        if (fileInfo.LastWriteTime != projectRootElement.LastWriteTimeWhenRead)
-                        {
-                            // File was changed on disk by external means. Cached version is no longer reliable. 
-                            // We could throw here or ignore the problem, but it is a common and reasonable pattern to change a file 
-                            // externally and load a new project over it to see the new content. So we dump it from the cache
-                            // to force a load from disk. There might then exist more than one ProjectRootElement with the same path,
-                            // but clients ought not get themselves into such a state - and unless they save them to disk,
-                            // it may not be a problem.  
-                            forgetEntry = true;
-                        }
-                        else if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("MSBUILDCACHECHECKFILECONTENT")))
+                        // File was changed on disk by external means. Cached version is no longer valid.
+                        // We could throw here or ignore the problem, but it is a common and reasonable pattern to change a file
+                        // externally and load a new project over it to see the new content. So we dump it from the cache
+                        // to force a load from disk. There might then exist more than one ProjectRootElement with the same path,
+                        // but clients ought not get themselves into such a state - and unless they save them to disk,
+                        // it may not be a problem.
+                        return true;
+                    }
+                    else if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("MSBUILDCACHECHECKFILECONTENT")))
+                    {
+                        lock (_locker)
                         {
                             // QA tests run too fast for the timestamp check to work. This environment variable is for their
                             // use: it checks the file content as well as the timestamp. That's better than completely disabling
@@ -207,42 +175,128 @@ namespace Microsoft.Build.Evaluation
 
                             if (diskContent != cacheContent)
                             {
-                                forgetEntry = true;
+                                return true;
                             }
-                        }
-
-                        if (forgetEntry)
-                        {
-                            ForgetEntry(projectRootElement);
-
-                            DebugTraceCache("Out of date dropped from XML cache: ", projectFile);
-                            projectRootElement = null;
                         }
                     }
                 }
+            }
 
-                if (projectRootElement == null && openProjectRootElement != null)
-                {
-                    projectRootElement = openProjectRootElement(projectFile, this);
+            return false;
+        }
 
-                    ErrorUtilities.VerifyThrowInternalNull(projectRootElement, "projectRootElement");
-                    ErrorUtilities.VerifyThrow(projectRootElement.FullPath == projectFile, "Got project back with incorrect path");
-                    ErrorUtilities.VerifyThrow(_weakCache.Contains(projectFile), "Open should have renamed into cache and boosted");
-                }
-                else if (projectRootElement != null)
+        /// <summary>
+        /// Returns an existing ProjectRootElement for the specified file path, if any.
+        /// If none exists, calls the provided delegate to load one, and adds that to the cache.
+        /// The reason that it calls back to do this is so that the cache is locked between determining
+        /// that the entry does not exist and adding the entry.
+        ///
+        /// If <see cref="_autoReloadFromDisk"/> was set to true, and the file on disk has changed since it was cached,
+        /// it will be reloaded before being returned.
+        ///
+        /// Thread safe.
+        /// </summary>
+        /// <remarks>
+        /// Never needs to consult the strong cache as well, since if the item is in there, it will
+        /// not have left the weak cache.
+        /// If item is found, boosts it to the top of the strong cache.
+        /// </remarks>
+        /// <param name="projectFile">The project file which contains the ProjectRootElement.  Must be a full path.</param>
+        /// <param name="openProjectRootElement">The delegate to use to load if necessary. May be null. Must not update the cache.</param>
+        /// <param name="isExplicitlyLoaded"><code>true</code> if the project is explicitly loaded, otherwise <code>false</code>.</param>
+        /// <param name="preserveFormatting"><code>true</code> to the project was loaded with the formated preserved, otherwise <code>false</code>.</param>
+        /// <returns>The ProjectRootElement instance if one exists.  Null otherwise.</returns>
+        internal override ProjectRootElement Get(string projectFile, OpenProjectRootElement openProjectRootElement, bool isExplicitlyLoaded,
+            bool? preserveFormatting)
+        {
+            // Should already have been canonicalized
+            ErrorUtilities.VerifyThrowInternalRooted(projectFile);
+
+            ProjectRootElement projectRootElement;
+            lock (_locker)
+            {
+                _weakCache.TryGetValue(projectFile, out projectRootElement);
+
+                if (projectRootElement != null)
                 {
-                    DebugTraceCache("Satisfied from XML cache: ", projectFile);
                     BoostEntryInStrongCache(projectRootElement);
+
+                    // An implicit load will never reset the explicit flag.
+                    if (isExplicitlyLoaded)
+                    {
+                        projectRootElement.MarkAsExplicitlyLoaded();
+                    }
                 }
+                else
+                {
+                    DebugTraceCache("Not found in cache: ", projectFile);
+                }
+
+                if (preserveFormatting != null && projectRootElement != null && projectRootElement.XmlDocument.PreserveWhitespace != preserveFormatting)
+                {
+                    //  Cached project doesn't match preserveFormatting setting, so reload it
+                    projectRootElement.Reload(true, preserveFormatting);
+                }
+            }
+
+            bool projectRootElementIsInvalid = IsInvalidEntry(projectFile, projectRootElement);
+            bool fromCacheOnly = openProjectRootElement == null;
+
+            lock (_locker)
+            {
+                if (projectRootElementIsInvalid)
+                {
+                    DebugTraceCache("Not satisfied from cache: ", projectFile);
+                    ForgetEntryIfExists(projectRootElement);
+                }
+
+                if (fromCacheOnly)
+                {
+                    if (projectRootElement == null || projectRootElementIsInvalid)
+                    {
+                        return null;
+                    }
+                    else
+                    {
+                        DebugTraceCache("Satisfied from XML cache: ", projectFile);
+                        return projectRootElement;
+                    }
+                }
+            }
+
+            // Use openProjectRootElement to reload the element if the cache element does not exist or need to be reloaded.
+            if (projectRootElement == null || projectRootElementIsInvalid)
+            {
+                // We do not lock loading with common _locker of the cache, to avoid lock contention.
+                // Decided also not to lock this section with the key specific locker to avoid the overhead and code overcomplication, as
+                // it is not likely that two threads would use Get function for the same project simulteniously and it is not a big deal if in some cases we load the same project twice.
+
+                ProjectRootElement newProjectRootElement = openProjectRootElement(projectFile, this);
+                ErrorUtilities.VerifyThrowInternalNull(newProjectRootElement, "projectRootElement");
+                ErrorUtilities.VerifyThrow(newProjectRootElement.FullPath == projectFile, "Got project back with incorrect path");
 
                 // An implicit load will never reset the explicit flag.
-                if (projectRootElement != null && isExplicitlyLoaded)
+                if (isExplicitlyLoaded)
                 {
-                    projectRootElement.MarkAsExplicitlyLoaded();
+                    newProjectRootElement?.MarkAsExplicitlyLoaded();
                 }
 
-                return projectRootElement;
+                lock (_locker)
+                {
+                    // Update cache element.
+                    // It is unlikely, but it might be that while without the lock, the projectRootElement in cache was updated by another thread.
+                    // And here its entry will be replaced with newProjectRootElement. This is fine:
+                    // if newProjectRootElement is out of date (so, it changed since the time we loaded it), it will be updated the next time some thread calls Get function.
+                    AddEntry(newProjectRootElement);
+                    projectRootElement = newProjectRootElement;
+                }
             }
+            else
+            {
+                DebugTraceCache("Satisfied from XML cache: ", projectFile);
+            }
+
+            return projectRootElement;
         }
 
         /// <summary>
@@ -507,6 +561,22 @@ namespace Microsoft.Build.Evaluation
             {
                 _strongCache.Remove(strongCacheEntry);
                 RaiseProjectRootElementRemovedFromStrongCache(strongCacheEntry.Value);
+            }
+
+            DebugTraceCache("Out of date dropped from XML cache: ", projectRootElement.FullPath);
+        }
+
+        /// <summary>
+        /// Completely remove an entry from this cache if it exists.
+        /// </summary>
+        /// <remarks>
+        /// Must be called within the cache lock.
+        /// </remarks>
+        private void ForgetEntryIfExists(ProjectRootElement projectRootElement)
+        {
+            if (_weakCache.TryGetValue(projectRootElement.FullPath, out var cached) && cached == projectRootElement)
+            {
+                ForgetEntry(projectRootElement);
             }
         }
 

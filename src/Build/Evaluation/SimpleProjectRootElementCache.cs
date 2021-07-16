@@ -63,6 +63,9 @@ namespace Microsoft.Build.Evaluation
                 ErrorUtilities.VerifyThrowInternalNull(rootElement, "projectRootElement");
                 ErrorUtilities.VerifyThrow(rootElement.FullPath.Equals(key, StringComparison.OrdinalIgnoreCase),
                     "Got project back with incorrect path");
+
+                AddEntry(rootElement);
+
                 ErrorUtilities.VerifyThrow(_cache.TryGetValue(key, out _),
                     "Open should have renamed into cache and boosted");
 
