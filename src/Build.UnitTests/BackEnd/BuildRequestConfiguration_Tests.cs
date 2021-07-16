@@ -26,7 +26,6 @@ namespace Microsoft.Build.UnitTests.BackEnd
         public BuildRequestConfiguration_Tests(ITestOutputHelper testOutput)
         {
             _env = TestEnvironment.Create(testOutput);
-            _env.DoNotLaunchDebugger();
         }
 
         public void Dispose()

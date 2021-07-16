@@ -647,7 +647,12 @@ namespace Microsoft.Build.BackEnd
         /// </summary>
         public bool CanScheduleRequestToNode(SchedulableRequest request, int nodeId)
         {
-            int requiredNodeId = GetAssignedNodeForRequestConfiguration(request.BuildRequest.ConfigurationId);
+            return CanScheduleConfigurationToNode(request.BuildRequest.ConfigurationId, nodeId);
+        }
+
+        public bool CanScheduleConfigurationToNode(int configurationId, int nodeId)
+        {
+            int requiredNodeId = GetAssignedNodeForRequestConfiguration(configurationId);
             return requiredNodeId == Scheduler.InvalidNodeId || requiredNodeId == nodeId;
         }
 

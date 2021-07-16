@@ -1623,9 +1623,12 @@ isoladamente.
     </source>
         <target state="translated">  -restore[:True|False]
                      Executa um destino chamado Restore antes de compilar
-                     outros destinos e garante o build desses                                                                          destinos usando uma lógica de build restaurada.                                                             Isso é útil quando sua árvore de
-projeto precisar                                                                       que pacotes sejam restaurados antes de serem compilados.                          Especificar -restore é o mesmo que
-                     especificar                            -restore:True. Use o parâmetro para
+                     outros destinos e garante o build desses
+                     destinos usando uma lógica de build restaurada.
+                     Isso é útil quando sua árvore de  projeto precisar
+                     que pacotes sejam restaurados antes de serem compilados.
+                     Especificar -restore é o mesmo que
+                     -restore:True. Use o parâmetro para
                      substituir um valor originado de um arquivo de resposta.
                      (Forma abreviada: -r)
     </target>

@@ -2,11 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Experimental.ProjectCache;
 using Microsoft.Build.Framework;
+using Shouldly;
 
 namespace MockCacheFromAssembly
 {
@@ -32,6 +34,8 @@ namespace MockCacheFromAssembly
             CancellationToken cancellationToken)
         {
             logger.LogMessage($"{nameof(AssemblyMockCache)}: GetCacheResultAsync for {buildRequest.ProjectFullPath}", MessageImportance.High);
+
+            buildRequest.ProjectInstance.ShouldNotBeNull("The cache plugin expects evaluated projects.");
 
             ErrorFrom(nameof(GetCacheResultAsync), logger);
 

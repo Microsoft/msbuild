@@ -12,4 +12,7 @@
     <ProjectReference Include="..\..\Build\Microsoft.Build.csproj" />
     <ProjectReference Include="..\..\Framework\Microsoft.Build.Framework.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Shouldly" Version="3.0.0" />
+  </ItemGroup>
 </Project>

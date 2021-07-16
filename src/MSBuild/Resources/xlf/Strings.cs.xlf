@@ -494,10 +494,10 @@ Copyright (C) Microsoft Corporation. Všechna práva vyhrazena.
                         ErrorsOnly – zobrazí jenom chyby.
                         WarningsOnly – zobrazí jenom upozornění.
                         NoItemAndPropertyList – nezobrazí na začátku sestavení každého
-                            projektu seznamy položek a vlastností.    
-                        ShowCommandLine – zobrazí zprávy TaskCommandLineEvent.  
+                            projektu seznamy položek a vlastností.
+                        ShowCommandLine – zobrazí zprávy TaskCommandLineEvent.
                         ShowTimestamp – před každou zprávou zobrazí
-                            časové razítko.                                           
+                            časové razítko.
                         ShowEventId – zobrazí ID události pro spuštěné a dokončené
                             události a zprávy.
                         ForceNoAlign – nenastavuje text podle velikosti vyrovnávací
@@ -634,7 +634,7 @@ Copyright (C) Microsoft Corporation. Všechna práva vyhrazena.
                      Setting this also turns on isolated builds (-isolate).
                      (short form: -orc)
    </source>
-        <target state="translated">  -outputResultsCache:&lt;souborMezipaměti&gt;...
+        <target state="translated">  -outputResultsCache:[souborMezipaměti]...
                      Výstupní soubor mezipaměti, do něhož bude MSBuild
                      zapisovat obsah svých mezipamětí výsledků sestavení.
                      Nastavením této možnosti zapnete také izolované buildy (-isolate).
@@ -794,7 +794,7 @@ Copyright (C) Microsoft Corporation. Všechna práva vyhrazena.
                      template and append the node id to this fileName to
                      create a log file for each node.
     </source>
-        <target state="translated">  -distributedFileLogger                                                       
+        <target state="translated">  -distributedFileLogger
                      Uloží výstup sestavení do více souborů protokolu, po jednom
                      pro každý uzel nástroje MSBuild. Tyto soubory jsou na počátku
                      umístěny v aktuálním adresáři. Standardně mají tyto soubory

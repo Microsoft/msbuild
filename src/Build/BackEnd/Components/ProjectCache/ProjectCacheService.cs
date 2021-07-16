@@ -4,6 +4,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -27,6 +28,15 @@ namespace Microsoft.Build.Experimental.ProjectCache
         public static implicit operator bool(NullableBool? d) => d is not null && d.Value;
     }
 
+    internal enum ProjectCacheServiceState
+    {
+        NotInitialized,
+        BeginBuildStarted,
+        BeginBuildFinished,
+        ShutdownStarted,
+        ShutdownFinished
+    }
+
     internal class ProjectCacheService
     {
         private readonly BuildManager _buildManager;
@@ -34,6 +44,7 @@ namespace Microsoft.Build.Experimental.ProjectCache
         private readonly ProjectCacheDescriptor _projectCacheDescriptor;
         private readonly CancellationToken _cancellationToken;
         private readonly ProjectCachePluginBase _projectCachePlugin;
+        private ProjectCacheServiceState _serviceState = ProjectCacheServiceState.NotInitialized;
 
         /// <summary>
         /// An instanatiable version of MSBuildFileSystemBase not overriding any methods,
@@ -46,6 +57,7 @@ namespace Microsoft.Build.Experimental.ProjectCache
         // Volatile because it is read by the BuildManager thread and written by one project cache service thread pool thread.
         // TODO: remove after we change VS to set the cache descriptor via build parameters.
         public volatile NullableBool? DesignTimeBuildsDetected;
+        private TaskCompletionSource<bool>? LateInitializationForVSWorkaroundCompleted;
 
         private ProjectCacheService(
             ProjectCachePluginBase projectCachePlugin,
@@ -75,31 +87,38 @@ namespace Microsoft.Build.Experimental.ProjectCache
             // their verbosity levels.
             var loggerFactory = new Func<PluginLoggerBase>(() => new LoggingServiceToPluginLoggerAdapter(LoggerVerbosity.Normal, loggingService));
 
-            // TODO: remove after we change VS to set the cache descriptor via build parameters.
-            if (pluginDescriptor.VsWorkaround)
+            var service = new ProjectCacheService(plugin, buildManager, loggerFactory, pluginDescriptor, cancellationToken);
+
+            // TODO: remove the if after we change VS to set the cache descriptor via build parameters and always call BeginBuildAsync in FromDescriptorAsync.
+            // When running under VS we can't initialize the plugin until we evaluate a project (any project) and extract
+            // further information (set by VS) from it required by the plugin.
+            if (!pluginDescriptor.VsWorkaround)
             {
-                // When running under VS we can't initialize the plugin until we evaluate a project (any project) and extract
-                // further information (set by VS) from it required by the plugin.
-                return new ProjectCacheService(plugin, buildManager, loggerFactory, pluginDescriptor, cancellationToken);
+                await service.BeginBuildAsync();
             }
 
-            await InitializePlugin(pluginDescriptor, cancellationToken, loggerFactory, plugin);
-
-            return new ProjectCacheService(plugin, buildManager, loggerFactory, pluginDescriptor, cancellationToken);
+            return service;
         }
 
-        private static async Task InitializePlugin(
-            ProjectCacheDescriptor pluginDescriptor,
-            CancellationToken cancellationToken,
-            Func<PluginLoggerBase> loggerFactory,
-            ProjectCachePluginBase plugin
-        )
+        // TODO: remove vsWorkaroundOverrideDescriptor after we change VS to set the cache descriptor via build parameters.
+        private async Task BeginBuildAsync(ProjectCacheDescriptor? vsWorkaroundOverrideDescriptor = null)
         {
-            var logger = loggerFactory();
+            var logger = _loggerFactory();
 
             try
             {
-                await plugin.BeginBuildAsync(
+                SetState(ProjectCacheServiceState.BeginBuildStarted);
+
+                logger.LogMessage("Initializing project cache plugin", MessageImportance.Low);
+                var timer = Stopwatch.StartNew();
+
+                if (_projectCacheDescriptor.VsWorkaround)
+                {
+                    logger.LogMessage("Running project cache with Visual Studio workaround");
+                }
+
+                var projectDescriptor = vsWorkaroundOverrideDescriptor ?? _projectCacheDescriptor;
+                await _projectCachePlugin.BeginBuildAsync(
                     new CacheContext(
                         pluginDescriptor.PluginSettings,
                         new DefaultMSBuildFileSystem(),
@@ -107,7 +126,12 @@ namespace Microsoft.Build.Experimental.ProjectCache
                         pluginDescriptor.EntryPoints),
                     // TODO: Detect verbosity from logging service.
                     logger,
-                    cancellationToken);
+                    _cancellationToken);
+
+                timer.Stop();
+                logger.LogMessage($"Finished initializing project cache plugin in {timer.Elapsed.TotalMilliseconds} ms", MessageImportance.Low);
+
+                SetState(ProjectCacheServiceState.BeginBuildFinished);
             }
             catch (Exception e)
             {
@@ -215,12 +239,19 @@ namespace Microsoft.Build.Experimental.ProjectCache
 
                 EvaluateProjectIfNecessary(request);
 
+                // Detect design time builds.
                 if (_projectCacheDescriptor.VsWorkaround)
                 {
-                    Interlocked.CompareExchange(
+                    var isDesignTimeBuild = IsDesignTimeBuild(request.Configuration.Project);
+
+                    var previousValue = Interlocked.CompareExchange(
                         ref DesignTimeBuildsDetected,
-                        new NullableBool(IsDesignTimeBuild(request.Configuration.Project)),
+                        new NullableBool(isDesignTimeBuild),
                         null);
+
+                    ErrorUtilities.VerifyThrowInternalError(
+                        previousValue is null || previousValue == false || isDesignTimeBuild,
+                        "Either all builds in a build session or design time builds, or none");
 
                     // No point progressing with expensive plugin initialization or cache query if design time build detected.
                     if (DesignTimeBuildsDetected)
@@ -230,13 +261,35 @@ namespace Microsoft.Build.Experimental.ProjectCache
                     }
                 }
 
+                // TODO: remove after we change VS to set the cache descriptor via build parameters.
+                // VS workaround needs to wait until the first project is evaluated to extract enough information to initialize the plugin.
+                // No cache request can progress until late initialization is complete.
                 if (_projectCacheDescriptor.VsWorkaround)
                 {
-                    // TODO: remove after we change VS to set the cache descriptor via build parameters.
-                    await LateInitializePluginForVsWorkaround(request);
+                    if (Interlocked.CompareExchange(
+                            ref LateInitializationForVSWorkaroundCompleted,
+                            new TaskCompletionSource<bool>(),
+                            null) is null)
+                    {
+                        await LateInitializePluginForVsWorkaround(request);
+                        LateInitializationForVSWorkaroundCompleted.SetResult(true);
+                    }
+                    else
+                    {
+                        // Can't be null. If the thread got here it means another thread initialized the completion source.
+                        await LateInitializationForVSWorkaroundCompleted!.Task;
+                    }
                 }
 
-                return await GetCacheResultAsync(cacheRequest.Submission.BuildRequestData);
+                ErrorUtilities.VerifyThrowInternalError(
+                    LateInitializationForVSWorkaroundCompleted is null ||
+                    _projectCacheDescriptor.VsWorkaround && LateInitializationForVSWorkaroundCompleted.Task.IsCompleted,
+                    "Completion source should be null when this is not the VS workaround");
+
+                return await GetCacheResultAsync(
+                    new BuildRequestData(
+                        request.Configuration.Project,
+                        request.Submission.BuildRequestData.TargetNames.ToArray()));
             }
 
             static bool IsDesignTimeBuild(ProjectInstance project)
@@ -284,7 +337,7 @@ namespace Microsoft.Build.Experimental.ProjectCache
                     FileSystems.Default.FileExists(solutionPath),
                     $"Solution file does not exist: {solutionPath}");
 
-                await InitializePlugin(
+                await BeginBuildAsync(
                     ProjectCacheDescriptor.FromAssemblyPath(
                         _projectCacheDescriptor.PluginAssemblyPath!,
                         new[]
@@ -294,10 +347,7 @@ namespace Microsoft.Build.Experimental.ProjectCache
                                 configuration.Project.GlobalProperties)
                         },
                         projectGraph: null,
-                        _projectCacheDescriptor.PluginSettings),
-                    _cancellationToken,
-                    _loggerFactory,
-                    _projectCachePlugin);
+                        _projectCacheDescriptor.PluginSettings));
             }
 
             static bool MSBuildStringIsTrue(string msbuildString) =>
@@ -306,6 +356,19 @@ namespace Microsoft.Build.Experimental.ProjectCache
 
         private async Task<CacheResult> GetCacheResultAsync(BuildRequestData buildRequest)
         {
+            lock (this)
+            {
+                CheckNotInState(ProjectCacheServiceState.NotInitialized);
+                CheckNotInState(ProjectCacheServiceState.BeginBuildStarted);
+
+                if (_serviceState is ProjectCacheServiceState.ShutdownStarted or ProjectCacheServiceState.ShutdownFinished)
+                {
+                    return CacheResult.IndicateNonCacheHit(CacheResultType.CacheNotApplicable);
+                }
+            }
+			
+            ErrorUtilities.VerifyThrowInternalNull(buildRequest.ProjectInstance, nameof(buildRequest.ProjectInstance));
+
             var queryDescription = $"{buildRequest.ProjectFullPath}" +
                                    $"\n\tTargets:[{string.Join(", ", buildRequest.TargetNames)}]" +
                                    $"\n\tGlobal Properties: {{{string.Join(",", buildRequest.GlobalProperties.Select(kvp => $"{kvp.Name}={kvp.EvaluatedValue}"))}}}";
@@ -361,16 +424,28 @@ namespace Microsoft.Build.Experimental.ProjectCache
 
             try
             {
+                SetState(ProjectCacheServiceState.ShutdownStarted);
+
+                logger.LogMessage("Shutting down project cache plugin", MessageImportance.Low);
+                var timer = Stopwatch.StartNew();
+
                 await _projectCachePlugin.EndBuildAsync(logger, _cancellationToken);
+
+                timer.Stop();
+                logger.LogMessage($"Finished shutting down project cache plugin in {timer.Elapsed.TotalMilliseconds} ms", MessageImportance.Low);
+
+                if (logger.HasLoggedErrors)
+                {
+                    ProjectCacheException.ThrowForErrorLoggedInsideTheProjectCache("ProjectCacheShutdownFailed");
+                }
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not ProjectCacheException)
             {
                 HandlePluginException(e, nameof(ProjectCachePluginBase.EndBuildAsync));
             }
-
-            if (logger.HasLoggedErrors)
+            finally
             {
-                ProjectCacheException.ThrowForErrorLoggedInsideTheProjectCache("ProjectCacheShutdownFailed");
+                SetState(ProjectCacheServiceState.ShutdownFinished);
             }
         }
 
@@ -385,6 +460,52 @@ namespace Microsoft.Build.Experimental.ProjectCache
                 e,
                 "ProjectCacheException",
                 apiExceptionWasThrownFrom);
+        }
+
+        private void SetState(ProjectCacheServiceState newState)
+        {
+            lock (this)
+            {
+                switch (newState)
+                {
+                    case ProjectCacheServiceState.NotInitialized:
+                        ErrorUtilities.ThrowInternalError($"Cannot transition to {ProjectCacheServiceState.NotInitialized}");
+                        break;
+                    case ProjectCacheServiceState.BeginBuildStarted:
+                        CheckInState(ProjectCacheServiceState.NotInitialized);
+                        break;
+                    case ProjectCacheServiceState.BeginBuildFinished:
+                        CheckInState(ProjectCacheServiceState.BeginBuildStarted);
+                        break;
+                    case ProjectCacheServiceState.ShutdownStarted:
+                        CheckNotInState(ProjectCacheServiceState.ShutdownStarted);
+                        CheckNotInState(ProjectCacheServiceState.ShutdownFinished);
+                        break;
+                    case ProjectCacheServiceState.ShutdownFinished:
+                        CheckInState(ProjectCacheServiceState.ShutdownStarted);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(newState), newState, null);
+                }
+
+                _serviceState = newState;
+            }
+        }
+
+        private void CheckInState(ProjectCacheServiceState expectedState)
+        {
+            lock (this)
+            {
+                ErrorUtilities.VerifyThrowInternalError(_serviceState == expectedState, $"Expected state {expectedState}, actual state {_serviceState}");
+            }
+        }
+
+        private void CheckNotInState(ProjectCacheServiceState unexpectedState)
+        {
+            lock (this)
+            {
+                ErrorUtilities.VerifyThrowInternalError(_serviceState != unexpectedState, $"Unexpected state {_serviceState}");
+            }
         }
 
         private class LoggingServiceToPluginLoggerAdapter : PluginLoggerBase

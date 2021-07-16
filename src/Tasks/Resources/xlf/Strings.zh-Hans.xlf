@@ -2647,7 +2647,7 @@
       </trans-unit>
       <trans-unit id="Xaml.MissingTaskBody">
         <source>MSB3692: Unable to create Xaml task.  The &lt;UsingTask&gt; does not contain a &lt;Task&gt; definition.</source>
-        <target state="translated">MSB3692:  无法创建 Xaml 任务。  &lt;UsingTask&gt; 未包含 &lt;Task&gt; 定义。</target>
+        <target state="translated">MSB3692: 无法创建 Xaml 任务。  &lt;UsingTask&gt; 未包含 &lt;Task&gt; 定义。</target>
         <note>{StrBegin="MSB3692: "}</note>
       </trans-unit>
       <trans-unit id="Xaml.ArgumentOutOfRange">
@@ -3242,7 +3242,7 @@
       </trans-unit>
       <trans-unit id="ErrorAndWarning.EmptyMessage">
         <source>(No message specified)</source>
-        <target state="translated">（未指定任何消息）</target>
+        <target state="translated">(未指定任何消息)</target>
         <note />
       </trans-unit>
       <trans-unit id="TaskFactoryNotSupportedFailure">

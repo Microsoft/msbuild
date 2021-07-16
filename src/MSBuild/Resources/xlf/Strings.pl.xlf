@@ -412,7 +412,7 @@ Copyright (C) Microsoft Corporation. Wszelkie prawa zastrzeżone.
                         [&lt;klasa rejestratora&gt;,]&lt;zestaw rejestratora&gt;
                         [;&lt;parametry rejestratora&gt;]
                      Składnia elementu &lt;klasa rejestratora&gt;:
-                        &lt;częściowa lub pełna przestrzeń nazw&gt;.]
+                        [&lt;częściowa lub pełna przestrzeń nazw&gt;.]
                         &lt;nazwa klasy rejestratora&gt;
                      Składnia elementu &lt;zestaw rejestratora&gt;:
                         {&lt;nazwa zestawu&gt;[,&lt;strong name&gt;] | &lt;plik zestawu&gt;}
@@ -807,6 +807,7 @@ Copyright (C) Microsoft Corporation. Wszelkie prawa zastrzeżone.
                      Domyślnie pliki mają nazwę
                      „MSBuild&lt;identyfikator węzła&gt;.log”. Lokalizację plików
                      i inne parametry rejestratora plików można określić
+
                      przez dodanie przełącznika „-fileLoggerParameters”.
 
                      Jeśli nazwa pliku zostanie ustawiona za pomocą przełącznika
@@ -1641,7 +1642,7 @@ dzienników                     tekstowych i wykorzystać w innych narzędziach 
                      przywrócenia pakietów przed ich skompilowaniem. Podanie parametru 
                      -restore jest równoznaczne z podaniem parametru -restore:True.
                      Za pomocą tego parametru można przesłonić wartość pochodzącą
-                     z pliku odpowiedzi.                     
+                     z pliku odpowiedzi.
                      (Krótka forma: -r)
     </target>
         <note>

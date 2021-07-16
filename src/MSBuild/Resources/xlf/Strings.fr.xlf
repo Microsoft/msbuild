@@ -844,13 +844,12 @@ Copyright (C) Microsoft Corporation. Tous droits réservés.
          Paramètres supplémentaires pour les journaliseurs de fichiers.
          La présence de ce commutateur implique l'utilisation du
          commutateur -fileLogger[n] correspondant.
-         S'il est spécifié, "n" doit être un chiffre entre 1 et 9.
+         S'il est spécifié, "n" doit être un chiffre entre 1 et 9.
          -fileLoggerParameters est également utilisé par tous les
-         journaliseurs vers des fichiers. Consultez la description
-         de -distributedFileLogger.
-         (Forme abrégée : -flp[n])
+         journaliseurs vers des fichiers. Consultez la description de -distributedFileLogger.
+         (Forme abrégée : -flp[n])
          Les mêmes paramètres que ceux listés pour le journaliseur de la
-         console sont disponibles. Paramètres supplémentaires disponibles :
+         console sont disponibles. Paramètres supplémentaires disponibles :
             LogFile--Chemin du fichier journal dans lequel
                 le journal de génération est écrit.
             Append--Détermine si le journal de génération est ajouté
@@ -862,7 +861,7 @@ Copyright (C) Microsoft Corporation. Tous droits réservés.
             Encoding--Spécifie l'encodage du fichier,
                 par exemple, UTF-8, Unicode ou ASCII
          Le niveau de détail par défaut est Detailed.
-         Exemples :
+         Exemples :
            -fileLoggerParameters:LogFile=MyLog.log;Append;
                    Verbosity=diagnostic;Encoding=UTF-8
 

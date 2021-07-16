@@ -125,8 +125,6 @@ namespace Microsoft.Build.UnitTests.Definition
         [Fact]
         public void IsolatedContextShouldNotSupportBeingPassedAFileSystem()
         {
-            _env.DoNotLaunchDebugger();
-
             var fileSystem = new Helpers.LoggingFileSystem();
             Should.Throw<ArgumentException>(() => EvaluationContext.Create(EvaluationContext.SharingPolicy.Isolated, fileSystem));
         }

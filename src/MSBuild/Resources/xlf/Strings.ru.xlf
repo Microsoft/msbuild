@@ -366,7 +366,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
                        -property:WarningLevel=2;OutDir=bin\Debug\
 </source>
         <target state="translated">  -property:&lt;n&gt;=&lt;v&gt;  Установите или переопределите свойства уровня проекта. &lt;n&gt; является
-                     именем свойства, а &lt;v&gt; —  его значением. Используйте 
+                     именем свойства, а &lt;v&gt; —  его значением. Используйте
                      точку с запятой или запятую, чтобы разделить несколько свойств, или
                      укажите каждое свойство отдельно. (Краткая форма: -p)
                      Пример:
@@ -572,12 +572,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
                      MSBuild will use up to the number of processors on the
                      computer. (Short form: -m[:n])
       </source>
-        <target state="translated">  -maxCpuCount[:n]   Указывает максимальное количество
-                     параллельных процессов сборки. Если ключ
-                     не используется, применяется значение по умолчанию 1.
-                     Если ключ используется без значения, MSBuild
-                     будет использовать то количество процессоров,
-                     которое установлено на компьютере. (Краткая форма: -m[:n])
+        <target state="translated">  -maxCpuCount[:n]   Указывает максимальное количество параллельных
+                     процессов сборки.  Если ключ не используется, применяется значение
+                     по умолчанию 1.  Если ключ используется без значения,
+                     MSBuild будет использовать то количество процессоров, которое установлено на
+                     компьютере. (Краткая форма: -m[:n])
       </target>
         <note>
           LOCALIZATION: "maxCpuCount" should not be localized.

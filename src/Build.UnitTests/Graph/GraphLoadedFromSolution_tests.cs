@@ -33,8 +33,6 @@ namespace Microsoft.Build.Graph.UnitTests
         [InlineData("1.sln", "2.proj")]
         public void ASolutionShouldBeTheSingleEntryPoint(params string[] files)
         {
-            _env.DoNotLaunchDebugger();
-
             for (var i = 0; i < files.Length; i++)
             {
                 files[i] = _env.CreateFile(files[i], string.Empty).Path;
@@ -52,8 +50,6 @@ namespace Microsoft.Build.Graph.UnitTests
         [Fact]
         public void GraphConstructionFailsOnNonExistentSolution()
         {
-            _env.DoNotLaunchDebugger();
-
             var exception = Should.Throw<InvalidProjectFileException>(
                 () =>
                 {
@@ -79,8 +75,6 @@ namespace Microsoft.Build.Graph.UnitTests
                 projectReferenceTargets: null,
                 defaultTargets: null,
                 extraContent: referenceToSolution);
-
-            _env.DoNotLaunchDebugger();
 
             var exception = Should.Throw<InvalidOperationException>(
                 () =>
@@ -621,8 +615,6 @@ namespace Microsoft.Build.Graph.UnitTests
         [Fact]
         public void GraphConstructionShouldThrowOnMissingSolutionDependencies()
         {
-            _env.DoNotLaunchDebugger();
-
             var solutionContents = SolutionFileBuilder.FromGraphEdges(
                 _env,
                 new Dictionary<int, int[]> {{1, null}, {2, null}},

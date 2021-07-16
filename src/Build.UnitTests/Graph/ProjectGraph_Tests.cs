@@ -106,7 +106,6 @@ namespace Microsoft.Build.Graph.UnitTests
         [Fact]
         public void ProjectGraphNodeConstructorNoNullArguments()
         {
-            _env.DoNotLaunchDebugger();
             Assert.Throws<InternalErrorException>(() => new ProjectGraphNode(null));
         }
 

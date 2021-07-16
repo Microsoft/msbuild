@@ -506,7 +506,7 @@ Telif Hakkı (C) Microsoft Corporation. Tüm hakları saklıdır.
                             devre dışı bırak.
                         EnableMPLogging--Çok işlemci olmayan modda çalışırken 
                             bile çok işlemcili günlük stilini etkinleştir. Bu 
-                            günlük stili varsayılan olarak açıktır.  
+                            günlük stili varsayılan olarak açıktır.
                         ForceConsoleColor--Konsol desteklemese bile ANSI
                             konsol renklerini kullan
                                                 Verbosity--Bu günlükçü için /verbosity ayarını
@@ -789,7 +789,7 @@ Telif Hakkı (C) Microsoft Corporation. Tüm hakları saklıdır.
                      template and append the node id to this fileName to
                      create a log file for each node.
     </source>
-        <target state="translated">  -distributedFileLogger                                                       
+        <target state="translated">  -distributedFileLogger
                      Derleme çıkışını, her MSBuild düğümü için bir günlük
                      dosyası olmak üzere birden çok günlük dosyasına kaydeder. Bu
                      dosyaların ilk konumu geçerli dizindir. Dosyaların 
@@ -1631,7 +1631,7 @@ Telif Hakkı (C) Microsoft Corporation. Tüm hakları saklıdır.
                      Bu, proje ağacınızın paketlerin oluşturulabilmesi için
                      önce geri yüklenmesini gerektirdiği durumlarda yararlıdır.
                      -restore değerinin belirtilmesi, -restore:True değerinin
-                     belirtilmesiyle aynıdır.  Yanıt dosyasından gelen bir değeri
+                     belirtilmesiyle aynıdır. Yanıt dosyasından gelen bir değeri
                      geçersiz kılmak için parametreyi kullanın.
                      (Kısa biçim: -r)
     </target>

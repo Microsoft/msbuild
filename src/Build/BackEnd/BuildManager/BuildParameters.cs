@@ -253,7 +253,7 @@ namespace Microsoft.Build.Execution
         /// <summary>
         /// Copy constructor
         /// </summary>
-        private BuildParameters(BuildParameters other)
+        internal BuildParameters(BuildParameters other, bool resetEnvironment = false)
         {
             ErrorUtilities.VerifyThrowInternalNull(other, nameof(other));
 
@@ -261,7 +261,11 @@ namespace Microsoft.Build.Execution
             _culture = other._culture;
             _defaultToolsVersion = other._defaultToolsVersion;
             _enableNodeReuse = other._enableNodeReuse;
-            _buildProcessEnvironment = other._buildProcessEnvironment != null ? new Dictionary<string, string>(other._buildProcessEnvironment) : null;
+            _buildProcessEnvironment = resetEnvironment
+                ? CommunicationsUtilities.GetEnvironmentVariables()
+                : other._buildProcessEnvironment != null
+                    ? new Dictionary<string, string>(other._buildProcessEnvironment)
+                    : null;
             _environmentProperties = other._environmentProperties != null ? new PropertyDictionary<ProjectPropertyInstance>(other._environmentProperties) : null;
             _forwardingLoggers = other._forwardingLoggers != null ? new List<ForwardingLoggerRecord>(other._forwardingLoggers) : null;
             _globalProperties = other._globalProperties != null ? new PropertyDictionary<ProjectPropertyInstance>(other._globalProperties) : null;

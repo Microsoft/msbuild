@@ -47,6 +47,14 @@ namespace Microsoft.Build.Shared
 #if !BUILDINGAPPXTASKS
         #region VerifyThrow -- for internal errors
 
+        internal static void VerifyThrowInternalError(bool condition, string message, params object[] args)
+        {
+            if (s_throwExceptions && !condition)
+            {
+                throw new InternalErrorException(ResourceUtilities.FormatString(message, args));
+            }
+        }
+
         /// <summary>
         /// Throws InternalErrorException. 
         /// This is only for situations that would mean that there is a bug in MSBuild itself.

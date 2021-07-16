@@ -800,7 +800,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
            开关设置的，分布式记录器将使用 fileName 作为
            模板并将节点 ID 附加到此 fileName 
            以便为每个节点创建一个日志文件。
-  </target>
+    </target>
         <note>
       LOCALIZATION: The following should not be localized:
       1) "MSBuild", "MSBuild.exe" and "MSBuild.rsp"
@@ -868,7 +868,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
             -flp:Summary;Verbosity=minimal;LogFile=msbuild.sum 
             -flp1:warningsonly;logfile=msbuild.wrn 
             -flp2:errorsonly;logfile=msbuild.err
-  </target>
+    </target>
         <note>
       LOCALIZATION: The following should not be localized:
       1) "MSBuild", "MSBuild.exe" and "MSBuild.rsp"

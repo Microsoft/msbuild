@@ -1382,7 +1382,7 @@ namespace Microsoft.Build.BackEnd
 
             void WarnWhenProxyBuildsGetScheduledOnOutOfProcNode()
             {
-                if (request.IsProxyBuildRequest() && nodeId != InProcNodeId)
+                if (request.IsProxyBuildRequest() && nodeId != InProcNodeId && _schedulingData.CanScheduleRequestToNode(request, InProcNodeId))
                 {
                     ErrorUtilities.VerifyThrow(
                         _componentHost.BuildParameters.DisableInProcNode || ForceAffinityOutOfProc,
@@ -2104,7 +2104,11 @@ namespace Microsoft.Build.BackEnd
                 return NodeAffinity.InProc;
             }
 
-            if (request.IsProxyBuildRequest())
+            ErrorUtilities.VerifyThrow(request.ConfigurationId != BuildRequestConfiguration.InvalidConfigurationId, "Requests should have a valid configuration id at this point");
+            // If this configuration has been previously built on an out of proc node, scheduling it on the inproc node can cause either an affinity mismatch error when
+            // there are other pending requests for the same configuration or "unscheduled requests remain in the presence of free out of proc nodes" errors if there's no pending requests.
+            // So only assign proxy builds to the inproc node if their config hasn't been previously assigned to an out of proc node.
+            if (_schedulingData.CanScheduleConfigurationToNode(request.ConfigurationId, InProcNodeId) && request.IsProxyBuildRequest())
             {
                 return NodeAffinity.InProc;
             }

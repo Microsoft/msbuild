@@ -505,7 +505,7 @@ Copyright (C) Microsoft Corporation. Alle Rechte vorbehalten.
                             bei der Mehrprozessorprotokollierung im Modus mit nur einem Prozessor.
                         EnableMPLogging: Aktiviert das Format der
                             Mehrprozessorprotokollierung auch bei der Ausführung
-                            im Modus mit nur einem Prozessor. Dieses Protokollierungsformat ist standardmäßig aktiviert.  
+                            im Modus mit nur einem Prozessor. Dieses Protokollierungsformat ist standardmäßig aktiviert. 
                         ForceConsoleColor: Verwendet selbst dann
                             ANSI-Konsolenfarben, wenn
                             die Konsole dies nicht unterstützt.

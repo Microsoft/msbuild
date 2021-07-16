@@ -35,6 +35,8 @@ public class MSBuildTestAssemblyFixture : IDisposable
 
         _testEnvironment = TestEnvironment.Create();
 
+        _testEnvironment.DoNotLaunchDebugger();
+
         //  Reset the VisualStudioVersion environment variable.  This will be set if tests are run from a VS command prompt.  However,
         //  if the environment variable is set, it will interfere with tests which set the SubToolsetVersion
         //  (VerifySubToolsetVersionSetByConstructorOverridable), as the environment variable would take precedence.
