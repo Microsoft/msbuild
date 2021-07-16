@@ -52,6 +52,8 @@ namespace Microsoft.Build.Tasks
         // if signing manifests is on and not all app files are included, then the project can't be published.
         private bool _canPublish;
         private Dictionary<string, ITaskItem> _runtimePackAssets;
+        // map of satellite assemblies that are included in References
+        private SatelliteRefAssemblyMap _satelliteAssembliesPassedAsReferences = new SatelliteRefAssemblyMap();
         #endregion
 
         #region Properties
@@ -380,6 +382,28 @@ namespace Microsoft.Build.Tasks
                 {
                     if (!IsFiltered(item))
                     {
+                        // ClickOnce for .NET 4.X should not publish duplicate satellite assemblies.
+                        // This will cause ClickOnce install to fail. This can happen if some package
+                        // decides to publish the en-us resource assemblies for other locales also.
+                        if (!LauncherBasedDeployment && _satelliteAssembliesPassedAsReferences.ContainsItem(item))
+                        {
+                            continue;
+                        }
+
+                        // Apply the culture publishing rules to include or exclude satellite assemblies
+                        AssemblyIdentity identity = AssemblyIdentity.FromManagedAssembly(item.ItemSpec);
+                        if (identity != null && !String.Equals(identity.Culture, "neutral", StringComparison.Ordinal))
+                        {
+                            CultureInfo satelliteCulture = GetItemCulture(item);
+                            if (PublishFlags.IsSatelliteIncludedByDefault(satelliteCulture, _targetCulture, _includeAllSatellites))
+                            {
+                                _satelliteAssembliesPassedAsReferences.Add(item);
+                            }
+                            else
+                            {
+                                continue;
+                            }
+                        }
                         item.SetMetadata("AssemblyType", "Managed");
                         assemblyMap.Add(item);
                     }
@@ -574,6 +598,10 @@ namespace Microsoft.Build.Tasks
                 foreach (ITaskItem item in _satelliteAssemblies)
                 {
                     item.SetMetadata("AssemblyType", "Satellite");
+                    if (_satelliteAssembliesPassedAsReferences.ContainsItem(item))
+                    {
+                        continue;
+                    }
                     satelliteMap.Add(item, true);
                 }
             }
@@ -855,6 +883,54 @@ namespace Microsoft.Build.Tasks
         }
         #endregion
 
+        #region SatelliteRefAssemblyMap
+        private class SatelliteRefAssemblyMap : IEnumerable
+        {
+            private readonly Dictionary<string, MapEntry> _dictionary = new Dictionary<string, MapEntry>(StringComparer.InvariantCultureIgnoreCase);
+
+            public MapEntry this[string fusionName]
+            {
+                get
+                {
+                    _dictionary.TryGetValue(fusionName, out MapEntry entry);
+                    return entry;
+                }
+            }
+
+            public bool ContainsItem(ITaskItem item)
+            {
+                AssemblyIdentity identity = AssemblyIdentity.FromManagedAssembly(item.ItemSpec);
+                if (identity != null)
+                {
+                    return _dictionary.ContainsKey(identity.ToString());
+                }
+                return false;
+            }
+
+            public void Add(ITaskItem item)
+            {
+                var entry = new MapEntry(item, true);
+                AssemblyIdentity identity = AssemblyIdentity.FromManagedAssembly(item.ItemSpec);
+                if (identity != null && !String.Equals(identity.Culture, "neutral", StringComparison.Ordinal))
+                {
+                    // Use satellite assembly strong name signature as key
+                    string key = identity.ToString();
+                    Debug.Assert(!_dictionary.ContainsKey(key), String.Format(CultureInfo.CurrentCulture, "Two or more items with same key '{0}' detected", key));
+                    if (!_dictionary.ContainsKey(key))
+                    {
+                        _dictionary.Add(key, entry);
+                    }
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return _dictionary.Values.GetEnumerator();
+            }
+        }
+        #endregion
+
+
         #region FileMap
         private class FileMap : IEnumerable
         {
@@ -1036,7 +1112,7 @@ namespace Microsoft.Build.Tasks
 
             public bool IsPublished { get; }
 
-            private static bool IsSatelliteIncludedByDefault(CultureInfo satelliteCulture, CultureInfo targetCulture, bool includeAllSatellites)
+            public static bool IsSatelliteIncludedByDefault(CultureInfo satelliteCulture, CultureInfo targetCulture, bool includeAllSatellites)
             {
                 // If target culture not specified then satellite is not included by default...
                 if (targetCulture == null)
