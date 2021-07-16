@@ -1759,7 +1759,7 @@ namespace Microsoft.Build.Evaluation
                 }
 
                 List<ExpressionShredder.ItemExpressionCapture> matches;
-                if (s_invariantCompareInfo.IndexOf(expression, '@') == -1)
+                if (expression.IndexOf('@') == -1)
                 {
                     return null;
                 }
@@ -2539,7 +2539,7 @@ namespace Microsoft.Build.Evaluation
                             {
                                 // It may be that the itemspec has unescaped ';'s in it so we need to split here to handle
                                 // that case.
-                                if (s_invariantCompareInfo.IndexOf(metadataValue, ';') >= 0)
+                                if (metadataValue.IndexOf(';') >= 0)
                                 {
                                     var splits = ExpressionShredder.SplitSemiColonSeparatedList(metadataValue);
 
