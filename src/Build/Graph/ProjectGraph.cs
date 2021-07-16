@@ -10,19 +10,20 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using Microsoft.Build.BackEnd;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Eventing;
 using Microsoft.Build.Exceptions;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Shared;
+using Microsoft.Build.Shared.Debugging;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.Graph
 {
     /// <summary>
     ///     Represents a graph of evaluated projects.
     /// </summary>
-    [DebuggerDisplay(@"#roots={GraphRoots.Count}, #nodes={ProjectNodes.Count}, #entryPoints={EntryPointNodes.Count}")]
+    [DebuggerDisplay(@"{DebuggerDisplayString()}")]
     public sealed class ProjectGraph
     {
         /// <summary>
@@ -475,13 +476,16 @@ namespace Microsoft.Build.Graph
             }
         }
 
-        internal string ToDot()
+        internal string ToDot(IReadOnlyDictionary<ProjectGraphNode, ImmutableList<string>> targetsPerNode = null)
         {
             var nodeCount = 0;
-            return ToDot(node => nodeCount++.ToString());
+            return ToDot(node => nodeCount++.ToString(), targetsPerNode);
         }
 
-        internal string ToDot(Func<ProjectGraphNode, string> nodeIdProvider)
+        internal string ToDot(
+            Func<ProjectGraphNode, string> nodeIdProvider,
+            IReadOnlyDictionary<ProjectGraphNode, ImmutableList<string>> targetsPerNode = null
+        )
         {
             ErrorUtilities.VerifyThrowArgumentNull(nodeIdProvider, nameof(nodeIdProvider));
 
@@ -489,31 +493,56 @@ namespace Microsoft.Build.Graph
 
             var sb = new StringBuilder();
 
-            sb.Append("digraph g\n{\n\tnode [shape=box]\n");
+            sb.AppendLine($"/* {DebuggerDisplayString()} */");
+
+            sb.AppendLine("digraph g")
+                .AppendLine("{")
+                .AppendLine("\tnode [shape=box]");
 
             foreach (var node in ProjectNodes)
             {
-                var nodeId = nodeIds.GetOrAdd(node, (n, idProvider) => idProvider(n), nodeIdProvider);
+                var nodeId = GetNodeId(node);
 
                 var nodeName = Path.GetFileNameWithoutExtension(node.ProjectInstance.FullPath);
+
                 var globalPropertiesString = string.Join(
                     "<br/>",
                     node.ProjectInstance.GlobalProperties.OrderBy(kvp => kvp.Key)
                         .Select(kvp => $"{kvp.Key}={kvp.Value}"));
 
-                sb.Append('\t').Append(nodeId).Append(" [label=<").Append(nodeName).Append("<br/>").Append(globalPropertiesString).AppendLine(">]");
+                var targetListString = GetTargetListString(node);
+
+                sb.AppendLine($"\t{nodeId} [label=<{nodeName}<br/>({targetListString})<br/>{globalPropertiesString}>]");
 
                 foreach (var reference in node.ProjectReferences)
                 {
-                    var referenceId = nodeIds.GetOrAdd(reference, (n, idProvider) => idProvider(n), nodeIdProvider);
+                    var referenceId = GetNodeId(reference);
 
-                    sb.Append('\t').Append(nodeId).Append(" -> ").AppendLine(referenceId);
+                    sb.AppendLine($"\t{nodeId} -> {referenceId}");
                 }
             }
 
             sb.Append("}");
 
             return sb.ToString();
+
+            string GetNodeId(ProjectGraphNode node)
+            {
+                return nodeIds.GetOrAdd(node, (n, idProvider) => idProvider(n), nodeIdProvider);
+            }
+
+            string GetTargetListString(ProjectGraphNode node)
+            {
+                var targetListString = targetsPerNode is null
+                    ? string.Empty
+                    : string.Join(", ", targetsPerNode[node]);
+                return targetListString;
+            }
+        }
+
+        private string DebuggerDisplayString()
+        {
+            return $"#roots={GraphRoots.Count}, #nodes={ProjectNodes.Count}, #entryPoints={EntryPointNodes.Count}";
         }
 
         private static IReadOnlyCollection<ProjectGraphNode> TopologicalSort(

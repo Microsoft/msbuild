@@ -19,6 +19,10 @@ using System.Xml;
 using Microsoft.Build.Shared.FileSystem;
 using System.Xml.Schema;
 using System.Runtime.Serialization;
+#if !CLR2COMPATIBILITY
+using Microsoft.Build.Shared.Debugging;
+#endif
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.Shared
 #endif
@@ -41,7 +45,15 @@ namespace Microsoft.Build.Shared
         /// <returns></returns>
         private static string GetDebugDumpPath()
         {
-            string debugPath = Environment.GetEnvironmentVariable("MSBUILDDEBUGPATH");
+            string debugPath =
+#if CLR2COMPATIBILITY || MICROSOFT_BUILD_ENGINE_OM_UNITTESTS
+                        Environment.GetEnvironmentVariable("MSBUILDDEBUGPATH");
+#else
+                ChangeWaves.AreFeaturesEnabled(ChangeWaves.Wave17_0)
+                    ? DebugUtils.DebugDumpPath()
+                    : Environment.GetEnvironmentVariable("MSBUILDDEBUGPATH");
+#endif
+
             return !string.IsNullOrEmpty(debugPath)
                     ? debugPath
                     : Path.GetTempPath();

@@ -12,6 +12,8 @@ using System.Threading.Tasks.Dataflow;
 using Microsoft.Build.BackEnd.Logging;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Shared;
+using Microsoft.Build.Shared.Debugging;
+using Microsoft.Build.Utilities;
 using BuildAbortedException = Microsoft.Build.Exceptions.BuildAbortedException;
 
 namespace Microsoft.Build.BackEnd
@@ -115,8 +117,10 @@ namespace Microsoft.Build.BackEnd
         /// </summary>
         internal BuildRequestEngine()
         {
-            _debugDumpState = Environment.GetEnvironmentVariable("MSBUILDDEBUGSCHEDULER") == "1";
-            _debugDumpPath = Environment.GetEnvironmentVariable("MSBUILDDEBUGPATH");
+            _debugDumpState = Traits.Instance.DebugScheduler;
+            _debugDumpPath = ChangeWaves.AreFeaturesEnabled(ChangeWaves.Wave17_0)
+                ? DebugUtils.DebugDumpPath()
+                : Environment.GetEnvironmentVariable("MSBUILDDEBUGPATH");
             _debugForceCaching = Environment.GetEnvironmentVariable("MSBUILDDEBUGFORCECACHING") == "1";
 
             if (String.IsNullOrEmpty(_debugDumpPath))

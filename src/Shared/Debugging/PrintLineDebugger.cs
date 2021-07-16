@@ -20,13 +20,6 @@ namespace Microsoft.Build.Shared.Debugging
     /// </summary>
     internal class PrintLineDebugger : IDisposable
     {
-        internal enum NodeMode
-        {
-            CentralNode,
-            OutOfProcNode,
-            OutOfProcTaskHostNode
-        }
-
         private static readonly Lazy<PropertyInfo> CommonWriterProperty = new Lazy<PropertyInfo>(
             () =>
             {
@@ -45,40 +38,9 @@ namespace Microsoft.Build.Shared.Debugging
         public static Lazy<PrintLineDebugger> DefaultWithProcessInfo =
             new Lazy<PrintLineDebugger>(() => Create(null, null, true));
 
-        private static readonly Lazy<NodeMode> ProcessNodeMode = new Lazy<NodeMode>(
-            () =>
-            {
-                return ScanNodeMode(Environment.CommandLine);
-
-                NodeMode ScanNodeMode(string input)
-                {
-                    var match = Regex.Match(input, @"/nodemode:(?<nodemode>[12\s])(\s|$)", RegexOptions.IgnoreCase);
-
-                    if (!match.Success)
-                    {
-                        return NodeMode.CentralNode;
-                    }
-                    var nodeMode = match.Groups["nodemode"].Value;
-
-                    Trace.Assert(!string.IsNullOrEmpty(nodeMode));
-
-                    return nodeMode switch
-                    {
-                        "1" => NodeMode.OutOfProcNode,
-                        "2" => NodeMode.OutOfProcTaskHostNode,
-                        _ => throw new NotImplementedException(),
-                    };
-                }
-            });
-
         private readonly string _id;
 
         private readonly CommonWriterType _writerSetByThisInstance;
-
-        public static string ProcessInfo
-            =>
-                $"{ProcessNodeMode.Value}_PID={Process.GetCurrentProcess() .Id}({Process.GetCurrentProcess() .ProcessName})x{(Environment.Is64BitProcess ? "64" : "86")}"
-            ;
 
         public PrintLineDebugger(string id, CommonWriterType writer)
         {
@@ -147,7 +109,7 @@ namespace Microsoft.Build.Shared.Debugging
         {
             return new PrintLineDebugger(
                 prependProcessInfo
-                    ? $"{ProcessInfo}_{id}"
+                    ? $"{DebugUtils.ProcessInfoString}_{id}"
                     : id,
                 writer);
         }

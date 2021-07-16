@@ -30,7 +30,9 @@ using Microsoft.Build.Graph;
 using Microsoft.Build.Internal;
 using Microsoft.Build.Logging;
 using Microsoft.Build.Shared;
+using Microsoft.Build.Shared.Debugging;
 using Microsoft.Build.Shared.FileSystem;
+using Microsoft.Build.Utilities;
 using ForwardingLoggerRecord = Microsoft.Build.Logging.ForwardingLoggerRecord;
 using LoggerDescription = Microsoft.Build.Logging.LoggerDescription;
 
@@ -486,7 +488,7 @@ namespace Microsoft.Build.Execution
             ILoggingService InitializeLoggingService()
             {
                 ILoggingService loggingService = CreateLoggingService(
-                    _buildParameters.Loggers,
+                    (_buildParameters.Loggers ?? Enumerable.Empty<ILogger>()).Concat(GetDebuggingLoggers()),
                     _buildParameters.ForwardingLoggers,
                     _buildParameters.WarningsAsErrors,
                     _buildParameters.WarningsAsMessages);
@@ -516,6 +518,22 @@ namespace Microsoft.Build.Execution
                 MSBuildEventSource.Log.BuildStop();
 
                 return loggingService;
+            }
+
+            // VS builds discard many msbuild events so attach a binlogger to capture them all.
+            IEnumerable<ILogger> GetDebuggingLoggers()
+            {
+                if (CurrentProcessMatchesDebugName() is false ||
+                    Traits.Instance.DebugEngine is false)
+                {
+                    return Enumerable.Empty<ILogger>();
+                }
+
+                var binlogPath = DebugUtils.FindNextAvailableDebugFilePath($"{DebugUtils.ProcessInfoString}_BuildManager_{_hostName}_{GetHashCode()}.binlog");
+
+                var logger = new BinaryLogger { Parameters = binlogPath };
+
+                return new []{ logger };
             }
 
             void InitializeCaches()
@@ -561,17 +579,14 @@ namespace Microsoft.Build.Execution
             }
         }
 
-        private void AttachDebugger()
+        private static void AttachDebugger()
         {
             if (Debugger.IsAttached)
             {
                 return;
             }
 
-            var processNameToBreakInto = Environment.GetEnvironmentVariable("MSBuildDebugBuildManagerOnStartProcessName");
-            var thisProcessMatchesName = string.IsNullOrWhiteSpace(processNameToBreakInto) || Process.GetCurrentProcess().ProcessName.Contains(processNameToBreakInto);
-
-            if (!thisProcessMatchesName)
+            if (!CurrentProcessMatchesDebugName())
             {
                 return;
             }
@@ -590,6 +605,15 @@ namespace Microsoft.Build.Execution
                     Console.ReadLine();
                     break;
             }
+        }
+
+        private static bool CurrentProcessMatchesDebugName()
+        {
+            var processNameToBreakInto = Environment.GetEnvironmentVariable("MSBuildDebugBuildManagerOnStartProcessName");
+            var thisProcessMatchesName = string.IsNullOrWhiteSpace(processNameToBreakInto) ||
+                                         Process.GetCurrentProcess().ProcessName.Contains(processNameToBreakInto);
+
+            return thisProcessMatchesName;
         }
 
         private void InitializeProjectCacheService(
@@ -1757,11 +1781,17 @@ namespace Microsoft.Build.Execution
                 if (submission.BuildRequestData.GraphBuildOptions.Build)
                 {
                     var cacheServiceTask = Task.Run(() => SearchAndInitializeProjectCachePluginFromGraph(projectGraph));
-                    var targetListTask = Task.Run(() => projectGraph.GetTargetLists(submission.BuildRequestData.TargetNames));
+                    var targetListTask = projectGraph.GetTargetLists(submission.BuildRequestData.TargetNames);
+
+                    DumpGraph(projectGraph, targetListTask);
 
                     using DisposablePluginService cacheService = cacheServiceTask.Result;
 
-                    resultsPerNode = BuildGraph(projectGraph, targetListTask.Result, submission.BuildRequestData);
+                    resultsPerNode = BuildGraph(projectGraph, targetListTask, submission.BuildRequestData);
+                }
+                else
+                {
+                    DumpGraph(projectGraph);
                 }
 
                 ErrorUtilities.VerifyThrow(
@@ -1824,6 +1854,18 @@ namespace Microsoft.Build.Execution
                 {
                     _overallBuildSuccess = false;
                 }
+            }
+
+            static void DumpGraph(ProjectGraph graph, IReadOnlyDictionary<ProjectGraphNode, ImmutableList<string>> targetList = null)
+            {
+                if (Traits.Instance.DebugEngine is false)
+                {
+                    return;
+                }
+
+                var logPath = DebugUtils.FindNextAvailableDebugFilePath($"{DebugUtils.ProcessInfoString}_ProjectGraph.dot");
+
+                File.WriteAllText(logPath, graph.ToDot(targetList));
             }
         }
 

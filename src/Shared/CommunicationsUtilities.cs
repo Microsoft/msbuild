@@ -13,7 +13,11 @@ using System.Threading;
 
 using Microsoft.Build.Shared;
 using System.Reflection;
+using Microsoft.Build.Utilities;
 
+#if !CLR2COMPATIBILITY
+using Microsoft.Build.Shared.Debugging;
+#endif
 #if !FEATURE_APM
 using System.Threading.Tasks;
 #endif
@@ -131,7 +135,7 @@ namespace Microsoft.Build.Internal
         /// <summary>
         /// Whether to trace communications
         /// </summary>
-        private static bool s_trace = String.Equals(Environment.GetEnvironmentVariable("MSBUILDDEBUGCOMM"), "1", StringComparison.Ordinal);
+        private static bool s_trace = Traits.Instance.DebugNodeCommunication;
 
         /// <summary>
         /// Place to dump trace
@@ -552,7 +556,14 @@ namespace Microsoft.Build.Internal
             {
                 if (s_debugDumpPath == null)
                 {
-                    s_debugDumpPath = Environment.GetEnvironmentVariable("MSBUILDDEBUGPATH");
+                    s_debugDumpPath =
+#if CLR2COMPATIBILITY
+                        Environment.GetEnvironmentVariable("MSBUILDDEBUGPATH");
+#else
+                        ChangeWaves.AreFeaturesEnabled(ChangeWaves.Wave17_0)
+                            ? DebugUtils.DebugDumpPath()
+                            : Environment.GetEnvironmentVariable("MSBUILDDEBUGPATH");
+#endif
 
                     if (String.IsNullOrEmpty(s_debugDumpPath))
                     {
