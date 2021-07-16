@@ -63,6 +63,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <AssemblyInformationCachePaths Condition="Exists('$(NetCoreRoot)sdk\$(NetCoreSdkVersion)\SdkPrecomputedAssemblyReferences.cache')">$(NetCoreRoot)sdk\$(NetCoreSdkVersion)\SDKPrecomputedAssemblyReferences.cache</AssemblyInformationCachePaths>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <DefaultItemExcludes>$(DefaultItemExcludes);*.log</DefaultItemExcludes>
     <DefaultItemExcludes>$(DefaultItemExcludes);*.binlog</DefaultItemExcludes>
 
