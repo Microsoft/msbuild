@@ -1326,6 +1326,16 @@
         <target state="translated">MSB3441: Der Assemblyname für "{0}" kann nicht abgerufen werden. {1}</target>
         <note>{StrBegin="MSB3441: "}</note>
       </trans-unit>
+      <trans-unit id="GetCompatiblePlatform.NoCompatiblePlatformFound">
+        <source>MSB3981: Could not determine what '{0}' should be built as. The project will be built normally.</source>
+        <target state="new">MSB3981: Could not determine what '{0}' should be built as. The project will be built normally.</target>
+        <note>{StrBegin="MSB3981: "}</note>
+      </trans-unit>
+      <trans-unit id="GetCompatiblePlatform.NoPlatformsListed">
+        <source>MSB3982: EnableDynamicPlatformResolution is true but referenced project '{0}' has no 'Platforms' metadata set. It will be built without a specified platform.</source>
+        <target state="new">MSB3982: EnableDynamicPlatformResolution is true but referenced project '{0}' has no 'Platforms' metadata set. It will be built without a specified platform.</target>
+        <note>{StrBegin="MSB3982: "}</note>
+      </trans-unit>
       <trans-unit id="GetFrameworkSdkPath.CouldNotFindSDK">
         <source>Could not locate the expected version of the Microsoft Windows SDK. Looked for a location specified in the "{0}" value of the registry key "{1}". If your build process does not need the SDK then this can be ignored. Otherwise you can solve the problem by doing one of the following:  1) Install the Microsoft Windows SDK.  2) Install Visual Studio 2010.  3) Manually set the above registry key to the correct location.</source>
         <target state="translated">Die erwartete Version des Microsoft Windows SDK wurde nicht gefunden. Es wurde nach einem im Wert "{0}" des Registrierungsschlüssels "{1}" angegebenen Speicherort gesucht. Wenn das SDK für den Buildprozess nicht erforderlich ist, kann diese Meldung ignoriert werden. Andernfalls können Sie das Problem mit einem der folgenden Verfahren beheben:  1) Installieren Sie das Microsoft Windows SDK.  2) Installieren Sie Visual Studio 2010.  3) Legen Sie den obigen Registrierungsschlüssel manuell auf den korrekten Speicherort fest.</target>

@@ -2893,6 +2893,19 @@
     <value>MSB3965: No output path specified in build settings.</value>
     <comment>{StrBegin="MSB3965: "}</comment>
   </data>
+
+  <!--
+        MSB3981 - MSB3990   Task: GetCompatiblePlatform
+  -->
+  <data name="GetCompatiblePlatform.NoCompatiblePlatformFound">
+    <value>MSB3981: Could not determine what '{0}' should be built as. The project will be built normally.</value>
+    <comment>{StrBegin="MSB3981: "}</comment>
+  </data>
+  <data name="GetCompatiblePlatform.NoPlatformsListed">
+    <value>MSB3982: EnableDynamicPlatformResolution is true but referenced project '{0}' has no 'Platforms' metadata set. It will be built without a specified platform.</value>
+    <comment>{StrBegin="MSB3982: "}</comment>
+  </data>
+
   <!--
         The tasks message bucket is: MSB3001 - MSB3999
 
@@ -2978,6 +2991,7 @@
             MSB3951 - MSB3960   Task: VerifyFileHash
             MSB3961 - MSB3970   Task: GenerateLauncher
             MSB3971 - MSB3980   Task: GetReferenceAssemblyPaths overflow
+            MSB3981 - MSB3990   Task: GetCompatiblePlatform
 
             MSB4000 - MSB4200   Portable targets & tasks (vsproject\flavors\portable\msbuild)
             MSB9000 - MSB9900   MSBuild targets files (C++)

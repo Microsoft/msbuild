@@ -342,6 +342,7 @@
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="ResourceHandling\*.cs" />
+    <Compile Include="GetCompatiblePlatform.cs" />
     <Compile Include="ResolveComReference.cs" />
     <Compile Include="BuildCacheDisposeWrapper.cs" />
     <Compile Include="DownloadFile.cs" />

@@ -1326,6 +1326,16 @@
         <target state="translated">MSB3441: "{0}" のアセンブリ名を取得できません。{1}</target>
         <note>{StrBegin="MSB3441: "}</note>
       </trans-unit>
+      <trans-unit id="GetCompatiblePlatform.NoCompatiblePlatformFound">
+        <source>MSB3981: Could not determine what '{0}' should be built as. The project will be built normally.</source>
+        <target state="new">MSB3981: Could not determine what '{0}' should be built as. The project will be built normally.</target>
+        <note>{StrBegin="MSB3981: "}</note>
+      </trans-unit>
+      <trans-unit id="GetCompatiblePlatform.NoPlatformsListed">
+        <source>MSB3982: EnableDynamicPlatformResolution is true but referenced project '{0}' has no 'Platforms' metadata set. It will be built without a specified platform.</source>
+        <target state="new">MSB3982: EnableDynamicPlatformResolution is true but referenced project '{0}' has no 'Platforms' metadata set. It will be built without a specified platform.</target>
+        <note>{StrBegin="MSB3982: "}</note>
+      </trans-unit>
       <trans-unit id="GetFrameworkSdkPath.CouldNotFindSDK">
         <source>Could not locate the expected version of the Microsoft Windows SDK. Looked for a location specified in the "{0}" value of the registry key "{1}". If your build process does not need the SDK then this can be ignored. Otherwise you can solve the problem by doing one of the following:  1) Install the Microsoft Windows SDK.  2) Install Visual Studio 2010.  3) Manually set the above registry key to the correct location.</source>
         <target state="translated">必要なバージョンの Microsoft Windows SDK が見つかりませんでした。レジストリ キー "{1}" の値 "{0}" で指定されている場所を探しました。このエラーは、ビルド処理で SDK が不要な場合は無視できます。SDK が必要な場合は、次のいずれかを行うことによって問題を解決できます。1) Microsoft Windows SDK をインストールする。2) Visual Studio 2010 をインストールする。3) 上記のレジストリ キーを正しい場所に手動で設定する。</target>

@@ -21,7 +21,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
           Condition="'$(ImportByWildcardBeforeMicrosoftCommonCrossTargetingTargets)' == 'true' and exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.CrossTargeting.targets\ImportBefore')"/>
 
   <Import Project="$(CustomBeforeMicrosoftCommonCrossTargetingTargets)" Condition="'$(CustomBeforeMicrosoftCommonCrossTargetingTargets)' != '' and Exists('$(CustomBeforeMicrosoftCommonCrossTargetingTargets)')"/>
-
+  
   <Target Name="GetTargetFrameworks"
           DependsOnTargets="GetTargetFrameworksWithPlatformFromInnerBuilds"
           Returns="@(_ThisProjectBuildMetadata)">
@@ -46,6 +46,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <!-- indicate to caller that project is RID agnostic so that a global property RuntimeIdentifier value can be removed -->
         <IsRidAgnostic>false</IsRidAgnostic>
         <IsRidAgnostic Condition=" '$(RuntimeIdentifier)' == '' and '$(RuntimeIdentifiers)' == '' ">true</IsRidAgnostic>
+        <!-- Extract necessary information for SetPlatform negotiation -->
+        <!-- This target does not run for cpp projects. -->
+        <IsVcxOrNativeProj>false</IsVcxOrNativeProj>
+        <PlatformOptions>$(Platforms)</PlatformOptions>
       </_ThisProjectBuildMetadata>
     </ItemGroup>
 
